@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treadmill Timeline</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="visualization">
+            <canvas id="ageChart"></canvas>
+        </div>
+        <div class="timeline-container">
+            <input type="range" id="timeSlider" min="0" max="60" value="0" step="1">
+            <div id="currentTime">Time: 0 minutes</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
