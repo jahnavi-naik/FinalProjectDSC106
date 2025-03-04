@@ -3,21 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Treadmill Timeline</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title> Physiology in Motion </title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script type="module" src="visualization.js"></script>
 </head>
 <body>
+    <header>
+        <h1> Physiology in Motion </h1>
+        <p class="subtitle"> Exploring the Data Behind Exercise Intensity </p>
+    </header>
+
     <div class="container">
-        <div class="visualization">
-            <canvas id="ageChart"></canvas>
-        </div>
+
+        <div id="time-display"> CURRENT TIME: 0 min 0 sec </div>
+
         <div class="timeline-container">
-            <input type="range" id="timeSlider" min="0" max="60" value="0" step="1">
-            <div id="currentTime">Time: 0 minutes</div>
+            <div id="timeline"></div>
+            <div id="timeline-annotations"></div>
         </div>
+
+        <br><br>
+
+        <div id="insights-panel" class="insights-panel">
+            <h3>Key Insights</h3>
+            <div id="dynamic-insights"></div>
+        </div>
+
+        <br>
+
+        <div class="dashboard">
+            <div id="age-chart" class="chart-container">
+                <h3>Age Distribution</h3>
+            </div>
+            <div id="gender-chart" class="chart-container">
+                <h3>Gender Distribution</h3>
+                <div id="active-pie"></div>
+                <div id="stopped-pie"></div>
+            </div>
+            <div id="weight-chart" class="chart-container">
+                <h3>Weight Distribution</h3>
+            </div>
+            <div id="height-chart" class="chart-container">
+                <h3>Height Distribution</h3>
+            </div>
+        </div>
+
     </div>
-    <script src="script.js"></script>
+
 </body>
-</html>
+</html> 
+
