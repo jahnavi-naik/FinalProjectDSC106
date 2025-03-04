@@ -1,61 +1,28 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    overflow: hidden; /* Prevent scrolling */
-}
-header {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 0;
-    text-align: center;
-}
-main {
+.container {
+    max-width: 800px;
+    margin: 50px auto;
     padding: 20px;
 }
-footer {
-    background-color: #333;
-    color: white;
+
+.visualization {
+    margin-bottom: 50px;
+}
+
+.timeline-container {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
     text-align: center;
-    padding: 10px 0;
-    position: fixed;
+}
+
+#timeSlider {
     width: 100%;
-    bottom: 0;
+    margin: 20px 0;
 }
 
-.treadmill {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100px;
-    background-color: #555;
-    overflow: hidden;
-}
-
-.runner {
-    position: absolute;
-    bottom: 10px;
-    left: -100px; /* Start off-screen */
-    width: 50px;
-    height: 50px;
-    background-color: red; /* Runner color */
-    border-radius: 50%; /* Make it circular */
-    animation: run 5s linear infinite; /* Animation */
-}
-
-@keyframes run {
-    0% { left: -100px; }
-    100% { left: 100%; } /* Move across the screen */
-}
-
-nav {
-    position: fixed;
-    bottom: 120px; /* Above the treadmill */
-    right: 20px;
-}
-
-button {
-    padding: 10px 20px;
-    font-size: 16px;
+#currentTime {
+    font-size: 18px;
+    color: #333;
 }
