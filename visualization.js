@@ -1,9 +1,3 @@
-// Define an array of objects with start time, end time, and text content
-const textsToDisplay = [
-    { startTime: 100, endTime: 200, text: "Example 1: " },
-    { startTime: 300, endTime: 500, text: "Example " }
-];
-
 // Initialize the visualization when the document is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Load the CSV data
@@ -102,21 +96,48 @@ function createVisualization(participants, rawData) {
         .domain([-1, d3.max(participants, d => d.endurance + 10)]) 
         .range([0, width]);
 
-    function addTextAtIntervals(currentTime) {
-        // Remove existing texts
-        timelineSvg.selectAll('.interval-text').remove();
+    // Define an array of objects with start time, end time, and text content
+    const textsToDisplay = [
+        { startTime: 80, endTime: 230, text: "A maximal graded exercise test is a physical assessment in which an individual performs progressively intense exercise until reaching voluntary exhaustion or physiological limits." },
+        { startTime: 240, endTime: 360, text: "It allows researchers to evaluate cardiovascular, respiratory, and metabolic responses to maximal exertion. " },
+        { startTime: 380, endTime: 550, text: "As you scroll, the running intensity increases. Each icon represents one participant who have reached their maximal effort. Here, our first participant quits at 8 min and 15 sec. Hover over the icon to learn more. " },
+        { startTime: 600, endTime: 800, text: "Blue icons represent males and pink icons represent females. We can observe that more women reach their maximal effort faster than men." },
+    ];
 
-        // Loop through the textsToDisplay and check if they should be displayed
-        textsToDisplay.forEach((entry) => {
-            if (currentTime >= entry.startTime && currentTime <= entry.endTime) {
+    function addTextAtIntervals(currentTime) {
+        // Select all existing text elements
+        const existingTexts = timelineSvg.selectAll('.interval-text');
+    
+        // Determine which texts should be displayed at this time
+        const activeTexts = textsToDisplay.filter(entry => currentTime >= entry.startTime && currentTime <= entry.endTime);
+        
+        // Remove only texts that are no longer active
+        existingTexts.each(function () {
+            const textElement = d3.select(this);
+            const textContent = textElement.text();
+            const stillActive = activeTexts.some(entry => entry.text === textContent);
+    
+            if (!stillActive) {
+                textElement.transition()
+                    .duration(200)
+                    .style("opacity", 0)
+                    .remove();
+            }
+        });
+    
+        // Add new texts only if they are not already displayed
+        activeTexts.forEach((entry) => {
+            const isTextAlreadyDisplayed = existingTexts.nodes().some(node => node.textContent === entry.text);
+            if (!isTextAlreadyDisplayed) {
                 timelineSvg.append('text')
                     .attr('class', 'interval-text')
-                    .attr('x', xScale(entry.startTime + (entry.endTime - entry.startTime) / 2)) // Place text in the middle of the interval
-                    .attr('y', height / 2)  // Position text in the middle of the SVG height
+                    .attr('x', xScale(entry.startTime + (entry.endTime - entry.startTime) / 2)) // Center in interval
+                    .attr('y', height / 2)  // Middle of the SVG
                     .text(entry.text)
-                    .style('font-size', '1.5em')
-                    .style('fill', 'black')
-                    .style('text-anchor', 'middle');
+                    .style("opacity", 0)  // Start invisible
+                    .transition()
+                    .duration(200) // Smooth fade-in
+                    .style("opacity", 1);
             }
         });
     }
@@ -168,10 +189,10 @@ function createVisualization(participants, rawData) {
     timelineSvg.append('foreignObject')
         .attr('class', 'text-box')  // Add class to the foreignObject
         .attr('x', 100)   // Set the X position of the text box
-        .attr('y', 120)   // Set the Y position of the text box
+        .attr('y', 150)   // Set the Y position of the text box
         .append('xhtml:div')  // Use 'xhtml' to access HTML elements inside SVG
         .attr('class', 'text-box-content')  // Add a separate class to the content div
-        .html('<p>Between 2008 and 2018, researchers at the University of Malaga conducted maximal graded exercise tests (GETs) to investigate how respiratory systems perform under extreme physical exertion. Our webpage presents the results of 857 participants. Scroll to the right to explore.</p>');
+        .html('<p>Between 2008 and 2018, researchers at the University of Málaga conducted maximal graded exercise tests (GETs) to investigate how respiratory systems perform under extreme physical exertion. Our webpage presents the results of 857 participants. Scroll to the right to explore!</p>');
 
     const iconSize = 36;  // Size of the icon
     const dots = timelineSvg.selectAll('.runner-dot')
