@@ -5,56 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> Physiology in Motion </title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script type="module" src="visualization.js"></script>
 </head>
 <body>
-    <header>
-        <h1> Physiology in Motion </h1>
-        <p class="subtitle"> Exploring the Data Behind Exercise Intensity </p>
-    </header>
 
-    <div class="container">
+    <div id="header">
+        <a href="./writeup/writeup.pdf" target="_blank" class="button"> VIEW OUR DESIGN RATIONALE </a>
+        <div id="live-stats">
+            <div id="time-display">
+                <p class="time">TIME: </p>
+                <div id="time"> 00:00</div>
+            </div>
 
-        <a href="./writeup/writeup.pdf" target="_blank" class="button"> View Our Design Rationale </a>
-        <div id="time-display"> CURRENT TIME: 0 min 0 sec </div>
-
-        <div class="timeline-container">
-            <div id="timeline"></div>
-            <div id="text-overlay"></div>
-        </div>
-
-        <br><br>
-
-        <div id="insights-panel" class="insights-panel">
-            <h3>Key Insights at Current Time</h3>
-            
-            <div class="dashboard">
-                <div class="chart-container">
-                    <h3>Age Comparison</h3>
-                    <div id="age-comparison-chart"></div>
-                </div>
-                <div class="chart-container">
-                    <h3>Gender Comparison</h3>
-                    <div id="gender-comparison-chart"></div>
-                </div>
-                <div class="chart-container">
-                    <h3>Height Comparison</h3>
-                    <div id="height-comparison-chart"></div>
-                </div>
-                <div class="chart-container">
-                    <h3>Weight Comparison</h3>
-                    <div id="weight-comparison-chart"></div>
-                </div>
-                <div class="chart-container count-container">
-                    <h3>Runner Count</h3>
-                    <div id="count-comparison-chart"></div>
-                </div>
+            <div id="speed-display">
+                <p class="speed"> AVG SPEED: </p>
+                <div id="speed"> 0 mph</div>
             </div>
         </div>
+    </div>
 
+
+    <div class="timeline-container">
+        <div id="timeline"></div>
+        <div id="anchored-text-m"></div>
+        <div id="anchored-text-t"></div>
+    </div>
+
+    <div id="bottom">
+        <div class="dashboard">
+            
+            <div id="active-chart" class="chart-container">
+            <h3> Active Participants </h3>
+            </div>
+
+            <div id="stats" class="chart-container">
+
+                <div id="stats-content">
+                    <div class="stats-group">
+                        <p> ACTIVE: </p>
+                        <div id="active-stats"></div>
+                    </div>
+
+                <div class="stats-group">
+                    <p> INACTIVE: </p>
+                    <div id="inactive-stats"></div>
+                </div>
+
+                </div>
+            </div>
+
+            <div id="weight-chart" class="chart-container">
+                <h3> ——— </h3>
+            </div>
+
+        </div>
     </div>
 
 </body>
 </html> 
+
 

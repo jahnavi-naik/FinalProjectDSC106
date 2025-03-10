@@ -8,110 +8,63 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     line-height: 1.6;
     color: #333;
-    background-color: #f5f5f5;
+    background-color: #ffffff;
 }
 
-header {
-    background-color: #2c3e50;
-    color: white;
-    padding: 2rem;
-    text-align: center;
-}
-
-.subtitle {
-    color: #ecf0f1;
-    font-size: 1.1rem;
-    margin-top: 0.5rem;
-}
-
-.container {
-    padding: 2rem;
+#header {
+    margin: 1em;
 }
 
 .timeline-container {
-    width: 100vw;  /* Make it span the full width */
-    max-width: 100%;  /* Ensure no overflow */
+    position: relative;
+    width: 100vw; 
+    max-width: 100%;  /* Ensure no horizontal overflow */
     margin: 0 auto;  /* Centering */
-    padding: 20px 0; /* Add some spacing */
-    position: relative; /* Keeps it in the document flow */
-    background-color: #f8f8f8; /* Optional: background to distinguish */
+    padding: 10px 0;
+    background-color: #333;
 }
+
 
 #timeline {
-    height: 550px;
+    height: 400px;
     width: 100%;
     overflow-x: scroll;
-    overflow-y: hidden;
-    position: relative;
-    cursor: default;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-}
-
-#timeline::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-}
-
-#timeline:active {
-    cursor: default;
-}
-
-#text-overlay {
-    position: absolute;
-    top: 20px; /* Adjust position */
-    left: 50%;
-    transform: translateX(-50%);
-    background: transparent; /* Changed from white background to transparent */
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 16px;
-    text-align: center;
-    width: 60%;
-    pointer-events: none; /* Ensures clicks go through */
-    display: none; /* Hide this element as we're using interval text instead */
+    overflow-y: auto;
+    cursor: grab;
+    margin-top: auto;  /* Push content to bottom */
 }
 
 .timeline-content {
-    height: 100%;
-    width: 8000px;
+    height: 500px;
+    width: 22000px;
     position: relative;
 }
 
-.timeline-marker {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background-color: #e74c3c;
-    pointer-events: none;
-    z-index: 10;
+
+#timeline:active {
+    cursor: grabbing;
 }
 
-.runner-dot {
-    transition: opacity 0.3s ease;
-}
-
-.runner-dot:hover {
-    cursor: pointer;
-    stroke: #2c3e50;
-    stroke-width: 2px;
+.runner {
+    transition: opacity 0.2s ease;
 }
 
 .milestone-line {
-    stroke: #e74c3c;
-    stroke-dasharray: 4,4;
-    opacity: 0.5;
+    stroke: #ffffff;
+    stroke-dasharray: 12, 8;
+    opacity: 0.85;
+    stroke-width: 2;
 }
 
 .milestone-text {
-    font-size: 12px;
-    fill: #e74c3c;
+    font-size: 0.9em;
+    fill: #ffffff;
     text-anchor: middle;
 }
 
 .timeline-tooltip {
     position: absolute;
-    background: rgba(44, 62, 80, 0.9);
+    background: #76323f;
     color: white;
     padding: 8px 12px;
     border-radius: 4px;
@@ -122,148 +75,28 @@ header {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Time indicator */
-.time-indicator {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(44, 62, 80, 0.9);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 14px;
-    z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
 .dashboard {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: minmax(160px, auto);
-    gap: 0.7rem;
-    margin-bottom: 0.8rem;
-}
-
-.dashboard > .count-container {
-    grid-column: 1 / -1;
-    margin-top: 0.3rem;
-}
-
-.demographics-panel {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    width: 100%;
 }
 
 .chart-container {
     background: white;
-    padding: 0.6rem;
+    padding: 1rem;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    height: 100%;
-    width: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    height: 250px;
+    position: relative;
+    width: 100%;  /* Take full width of grid cell */
 }
 
 .chart-container h3 {
-    margin-bottom: 0.2rem;
-    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    color: #76323f;
     font-size: 0.9rem;
     text-align: center;
-}
-
-#count-comparison-chart {
-    height: 120px;
-}
-
-#age-comparison-chart,
-#gender-comparison-chart,
-#height-comparison-chart,
-#weight-comparison-chart {
-    height: 150px;
-}
-
-.bar {
-    transition: fill 0.3s ease;
-}
-
-.bar:hover {
-    opacity: 0.8;
-}
-
-.value-label {
-    font-weight: 500;
-}
-
-.user-input-panel {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: center;
-}
-
-.form-group {
-    margin: 0;
-    flex: 1;
-    min-width: 200px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.25rem;
-    color: #2c3e50;
-    font-size: 0.9rem;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-button {
-    align-self: flex-end;
-    margin-bottom: 2px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #2980b9;
-}
-
-.insights-panel {
-    background: white;
-    padding: 1.2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-top: 1rem;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.insights-panel h3 {
-    margin-bottom: 0.8rem;
-    text-align: center;
-    color: #2c3e50;
-    font-size: 1.1rem;
 }
 
 /* D3.js specific styles */
@@ -273,7 +106,7 @@ button:hover {
 }
 
 .axis text {
-    fill: #666;
+    fill: #fff;
     font-size: 12px;
 }
 
@@ -287,49 +120,201 @@ button:hover {
     pointer-events: none;
 }
 
-#time-display {
-    font-size: 1.4em;
-    color: #FFF;
-    background-color: #2c3e50;
-    width: 350px;
-    padding: 8px;
-    border-radius: 5px;
+#time-display, #speed-display{
+    display: flex;
+    gap: 2px;
     text-align: center;
+    justify-content: center;
+    align-items: center; 
 }
+
+p.time, p.speed {
+    margin-right: 10px;
+    color: #333;
+}
+
+#time, #speed {
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 1.25px;
+    color: #FFF;
+    background-color: #76323f;
+    width: 120px;
+    height: 30px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+}
+
 
 a.button {
     position: absolute;
     top: 10px;
     right: 10px;
     margin: 3px;
-    padding: 8px 12px;
-    color: #2c3e50;
-    border: 1.2px solid #2c3e50;
+    padding: 10px 15px;
+    height: 30px;
+    color: #76323f;
+    border: 1.2px solid #76323f;
     background-color: white;
     font-size: 1em;
     text-decoration: none;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
 }
 
 a.button:hover {
-    background-color: #2c3e50;
+    background-color: #76323f;
     color: #FFF;
     transform: translateY(-1px);
 }
 
-.interval-text {
-    font-size: 1.2em;
-    fill: #2c3e50;
+.time-label {
+    font-size: 1em;
     text-anchor: middle;
-    opacity: 0; /* Start invisible */
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    font-weight: 500;
-    text-shadow: 0px 0px 5px rgba(255, 255, 255, 0.9); /* Add text shadow to make it readable */
+    fill: #f8f8f8;
 }
 
-.interval-text.show {
-    opacity: 1;
-    transform: translateY(0px); /* Normal position */
+.text-box {
+    width: 500px;
+    height: 200px;
+    position: absolute;  /* Ensure that the foreignObject is positioned */
+    z-index: 1;  /* Ensure it stays on top of other SVG elements */
+}
+
+.text-box-content {
+    font-size: 1em;
+    color: #f8f8f8;
+    position: absolute;  /* Ensures text stays within the box */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px;
+}
+
+/* To ensure the text stays visible even when scrolling */
+.text-box-content.fixed {
+    position: fixed;
+    top: 130px;  /* Set a fixed position on the page (change to your desired position) */
+    left: 50%;
+    transform: translateX(-50%);  /* Center the content */
+    width: 500px;
+    z-index: 1000;  /* Ensure it appears on top */
+}
+
+
+#anchored-text-m {
+    position: absolute;     /* Keeps it fixed on the screen */
+    top: 130px;           /* Adjust vertical position */
+    left: 380px;           /* Center horizontally */
+    width: 550px;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1;        /* Ensure it sits above the timeline */
+    pointer-events: none;
+    opacity: 0;          /* Start hidden */
+    transition: opacity 100ms ease-in-out;
+    color: white;
+}
+
+#anchored-text-t {
+    position: absolute;     /* Keeps it fixed on the screen */
+    top: 22px;           /* Adjust vertical position */
+    left: 380px;           /* Center horizontally */
+    width: 550px;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1;        /* Ensure it sits above the timeline */
+    pointer-events: none;
+    opacity: 0;          /* Start hidden */
+    transition: opacity 100ms ease-in-out;
+    color: white;
+}
+
+#live-stats {
+    display: flex;
+    gap: 25px; /* Adjust space between elements */
+    align-items: center; /* Align items vertically */
+    font-size: 1em; /* Adjust as needed */
+    font-weight: bold;
+}
+
+#bottom {
+    margin: 2rem auto;  /* Center horizontally */
+    padding: 0 2rem;    /* Add padding on sides */
+    width: 100%;        /* Take full width up to max-width */
+}
+
+#active-chart {
+    display: flex; /* Ensures items inside the container can align flexibly */
+    flex-direction: column; /* Stack items vertically */
+    align-items: stretch; /* Stretch content to take full container width */
+    justify-content: flex-start; /* Align content at the top */
+    padding: 10px;
+    height: 100%; /* Ensure container takes full height */
+    overflow: auto; /* Allow scrolling if content overflows */
+}
+
+.chart-container {
+    flex: 1; /* Allow the chart-container to take up remaining space */
+}
+
+#stats {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 10px;
+    overflow: auto;
+    position: relative;
+}
+
+#active-stats, #inactive-stats {
+    flex: 1;
+    padding: 0.5rem;
+    background-color: #76323f;
+    border-radius: 20px;
+}
+
+#stats-content {
+    display: flex;
+    flex-direction: column; /* Stack the active and inactive stats vertically */
+    height: 100%; /* Allow it to take the full height of the parent */
+    gap: 1rem; /* Space between the two boxes */
+}
+
+#stats-content p {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+#active-stats dl, #inactive-stats dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 1fr);
+    gap: 5px;
+    justify-items: center;
+}
+
+#active-stats dt, #inactive-stats dt {
+    font-weight: bold;
+    grid-row: 1;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    color: #fde8e8;
+}
+
+#active-stats dd, #inactive-stats dd {
+    grid-row: 2;
+    margin: 0;
+    text-align: center;
+    font-size: 1.3em;
+    color: #FFF;
 }
