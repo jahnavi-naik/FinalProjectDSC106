@@ -41,9 +41,19 @@ header {
     height: 550px;
     width: 100%;
     overflow-x: scroll;
-    overflow-y: auto;
+    overflow-y: hidden;
     position: relative;
-    cursor: grab;
+    cursor: default;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+#timeline::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+#timeline:active {
+    cursor: default;
 }
 
 #text-overlay {
@@ -51,17 +61,14 @@ header {
     top: 20px; /* Adjust position */
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.8);
+    background: transparent; /* Changed from white background to transparent */
     padding: 10px;
     border-radius: 5px;
     font-size: 16px;
     text-align: center;
     width: 60%;
     pointer-events: none; /* Ensures clicks go through */
-}
-
-#timeline:active {
-    cursor: grabbing;
+    display: none; /* Hide this element as we're using interval text instead */
 }
 
 .timeline-content {
@@ -131,9 +138,15 @@ header {
 
 .dashboard {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: minmax(160px, auto);
+    gap: 0.7rem;
+    margin-bottom: 0.8rem;
+}
+
+.dashboard > .count-container {
+    grid-column: 1 / -1;
+    margin-top: 0.3rem;
 }
 
 .demographics-panel {
@@ -148,17 +161,41 @@ header {
 
 .chart-container {
     background: white;
-    padding: 1rem;
+    padding: 0.6rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    height: 200px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    height: 100%;
+    width: 100%;
 }
 
 .chart-container h3 {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
     color: #2c3e50;
     font-size: 0.9rem;
     text-align: center;
+}
+
+#count-comparison-chart {
+    height: 120px;
+}
+
+#age-comparison-chart,
+#gender-comparison-chart,
+#height-comparison-chart,
+#weight-comparison-chart {
+    height: 150px;
+}
+
+.bar {
+    transition: fill 0.3s ease;
+}
+
+.bar:hover {
+    opacity: 0.8;
+}
+
+.value-label {
+    font-weight: 500;
 }
 
 .user-input-panel {
@@ -213,9 +250,20 @@ button:hover {
 
 .insights-panel {
     background: white;
-    padding: 2rem;
+    padding: 1.2rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-top: 1rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.insights-panel h3 {
+    margin-bottom: 0.8rem;
+    text-align: center;
+    color: #2c3e50;
+    font-size: 1.1rem;
 }
 
 /* D3.js specific styles */
@@ -237,16 +285,6 @@ button:hover {
     border-radius: 4px;
     font-size: 0.875rem;
     pointer-events: none;
-}
-
-.text-box {
-    width: 600px;
-    height: 200px;
-}
-
-.text-box-content {
-    font-size: 1.3em;
-    color: #333;
 }
 
 #time-display {
@@ -282,11 +320,13 @@ a.button:hover {
 }
 
 .interval-text {
-    font-size: 1.3em;
-    fill: #333;
+    font-size: 1.2em;
+    fill: #2c3e50;
     text-anchor: middle;
     opacity: 0; /* Start invisible */
     transition: opacity 0.2s ease, transform 0.2s ease;
+    font-weight: 500;
+    text-shadow: 0px 0px 5px rgba(255, 255, 255, 0.9); /* Add text shadow to make it readable */
 }
 
 .interval-text.show {

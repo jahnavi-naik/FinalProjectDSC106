@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Initialize the visualization
         createVisualization(participantData, rawData);
+        
+        // Set the initial time display text
+        document.getElementById('time-display').textContent = 'CURRENT TIME: 0 min 0 sec';
+        document.querySelector('#insights-panel h3').textContent = 'Key Insights at 0 min 0 sec';
 
     }).catch(error => {
         console.error('Error loading the data:', error);
@@ -64,13 +68,23 @@ function createVisualization(participants, rawData) {
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // Add shading that will cover the full height
+    // First, add a background rect to cover the entire SVG area
+    timelineSvg.append('rect')
+        .attr('class', 'background')
+        .attr('x', 0)
+        .attr('y', -margin.top) // Start above the g element to cover the full height
+        .attr('width', width)
+        .attr('height', height + margin.top + margin.bottom)
+        .style('fill', 'transparent'); // Transparent background
+        
     const shading = timelineSvg.append('rect')
         .attr('class', 'shading')
         .attr('x', 0)
-        .attr('y', 0)
+        .attr('y', -margin.top) // Extend above the g element
         .attr('width', 0)  // Initially set width to 0
-        .attr('height', height)
-        .style('fill', 'rgba(188, 188, 188, 0.1)') // Light shading
+        .attr('height', height + margin.top + margin.bottom) // Cover the full height including margins
+        .style('fill', 'rgba(188, 188, 188, 0.15)') // Slightly darker shading
         .style('pointer-events', 'none'); // Make sure it doesn't interfere with interaction
 
     // Group participants by their endurance time (rounded to nearest 5 seconds)
@@ -186,14 +200,6 @@ function createVisualization(participants, rawData) {
         .style('font-size', '1em')
         .style('text-anchor', 'middle');
 
-    timelineSvg.append('foreignObject')
-        .attr('class', 'text-box')  // Add class to the foreignObject
-        .attr('x', 100)   // Set the X position of the text box
-        .attr('y', 150)   // Set the Y position of the text box
-        .append('xhtml:div')  // Use 'xhtml' to access HTML elements inside SVG
-        .attr('class', 'text-box-content')  // Add a separate class to the content div
-        .html('<p>Between 2008 and 2018, researchers at the University of Málaga conducted maximal graded exercise tests (GETs) to investigate how respiratory systems perform under extreme physical exertion. Our webpage presents the results of 857 participants. Scroll to the right to explore!</p>');
-
     const iconSize = 36;  // Size of the icon
     const dots = timelineSvg.selectAll('.runner-dot')
         .data(stackedParticipants)
@@ -274,9 +280,12 @@ function createVisualization(participants, rawData) {
         .attr('class', 'milestone-text')
         .attr('y', -10)
         .text(d => d.description);
-
-    // Create demographic charts
-    createDemographicCharts(participants);
+        
+    // Initialize with time 0
+    updateVisualization(0, participants);
+    
+    // Set initial shading at time 0
+    shading.attr('width', xScale(0));
 }
 
 function calculateMilestones(data) {
@@ -303,260 +312,786 @@ function calculateMilestones(data) {
     ];
 }
 
-function createDemographicCharts(participants) {
-    createAgeChart(participants);
-    createGenderChart(participants);
-    createWeightChart(participants);
-    createHeightChart(participants);
+function updateVisualization(currentTime, participants) {
+    // Identify active and stopped participants
+    // A participant is active if their endurance time is greater than the current time
+    const activeParticipants = participants.filter(p => p.endurance > currentTime);
+    // A participant has stopped if their endurance time is less than or equal to the current time
+    const stoppedParticipants = participants.filter(p => p.endurance <= currentTime);
+    
+    // Update the title of the insights panel with current time
+    document.querySelector('#insights-panel h3').textContent = 
+        `Key Insights at ${Math.floor(currentTime / 60)} min ${Math.floor(currentTime % 60)} sec`;
+    
+    // Update all comparison charts
+    updateCountComparisonChart(activeParticipants, stoppedParticipants);
+    updateAgeComparisonChart(activeParticipants, stoppedParticipants);
+    updateGenderComparisonChart(activeParticipants, stoppedParticipants);
+    updateHeightComparisonChart(activeParticipants, stoppedParticipants);
+    updateWeightComparisonChart(activeParticipants, stoppedParticipants);
 }
 
-function createAgeChart(participants) {
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    const container = document.getElementById('age-chart');
-    const width = container.clientWidth - margin.left - margin.right;
-    const height = container.clientHeight - margin.top - margin.bottom - 30; // Account for title
-
-    const svg = d3.select('#age-chart')
+// New function to create and update the count comparison chart
+function updateCountComparisonChart(activeParticipants, stoppedParticipants) {
+    const chartContainer = document.getElementById('count-comparison-chart');
+    
+    // Clear previous chart
+    chartContainer.innerHTML = '';
+    
+    // Get counts
+    const activeCount = activeParticipants.length;
+    const stoppedCount = stoppedParticipants.length;
+    const totalCount = activeCount + stoppedCount;
+    
+    // Skip if no data
+    if (totalCount === 0) return;
+    
+    // Set up dimensions
+    const margin = { top: 10, right: 30, bottom: 40, left: 100 };
+    const width = chartContainer.clientWidth - margin.left - margin.right;
+    const height = chartContainer.clientHeight - margin.top - margin.bottom - 10;
+    
+    // Create SVG
+    const svg = d3.select(chartContainer)
         .append('svg')
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Create age groups (0-10, 11-20, etc.)
-    const ageGroups = d3.group(participants, d => Math.floor(d.age / 10) * 10);
-    const data = Array.from(ageGroups, ([key, value]) => ({
-        age: key,
-        count: value.length
-    })).sort((a, b) => a.age - b.age);
-
-    const x = d3.scaleBand()
-        .range([0, width])
-        .padding(0.1)
-        .domain(data.map(d => d.age));
-
-    const y = d3.scaleLinear()
-        .range([height, 0])
-        .domain([0, d3.max(data, d => d.count)]);
-
+    
+    // Data for the chart
+    const data = [
+        { 
+            category: 'Continuing', 
+            value: activeCount,
+            percentage: (activeCount / totalCount * 100).toFixed(1)
+        },
+        { 
+            category: 'Stopped', 
+            value: stoppedCount,
+            percentage: (stoppedCount / totalCount * 100).toFixed(1)
+        }
+    ];
+    
+    // X scale
+    const xScale = d3.scaleLinear()
+        .domain([0, d3.max([activeCount, stoppedCount]) * 1.1])
+        .range([0, width]);
+    
+    // Y scale
+    const yScale = d3.scaleBand()
+        .domain(data.map(d => d.category))
+        .range([0, height])
+        .padding(0.3);
+    
+    // Add X axis
     svg.append('g')
         .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(x).tickFormat(d => `${d}-${d+9}`));
-
+        .attr('class', 'axis')
+        .call(d3.axisBottom(xScale).ticks(5))
+        .selectAll('text')
+        .style('text-anchor', 'middle');
+    
+    // Add X axis label
+    svg.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', height + margin.bottom - 5)
+        .style('font-size', '10px')
+        .text('Number of Runners');
+    
+    // Add Y axis
     svg.append('g')
-        .call(d3.axisLeft(y));
-
-    svg.selectAll('.bar')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(yScale));
+    
+    // Create tooltip
+    const tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+    
+    // Add bars
+    const bars = svg.selectAll('.bar')
         .data(data)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar')
-        .attr('x', d => x(d.age))
-        .attr('width', x.bandwidth())
-        .attr('y', d => y(d.count))
-        .attr('height', d => height - y(d.count))
-        .style('fill', '#3498db');
-}
-
-function createGenderChart(participants) {
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    const container = document.getElementById('gender-chart');
-    const width = container.clientWidth - margin.left - margin.right;
-    const height = container.clientHeight - margin.top - margin.bottom - 30;
-
-    const svg = d3.select('#gender-chart')
-        .append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${width/2},${height/2})`);
-
-    const genderCounts = d3.group(participants, d => d.gender);
-    const data = Array.from(genderCounts, ([key, value]) => ({
-        gender: key,
-        count: value.length
-    }));
-
-    const radius = Math.min(width, height) / 2;
-    const color = d3.scaleOrdinal()
-        .domain(['M', 'F'])
-        .range(['#3498db', '#e74c3c']);
-
-    const pie = d3.pie()
-        .value(d => d.count);
-
-    const arc = d3.arc()
-        .innerRadius(0)
-        .outerRadius(radius);
-
-    const arcs = svg.selectAll('arc')
-        .data(pie(data))
         .enter()
         .append('g');
-
-    arcs.append('path')
-        .attr('d', arc)
-        .attr('fill', d => color(d.data.gender));
-
-    // Add labels
-    arcs.append('text')
-        .attr('transform', d => `translate(${arc.centroid(d)})`)
-        .attr('text-anchor', 'middle')
-        .text(d => `${d.data.gender} (${d.data.count})`)
-        .style('fill', 'white')
-        .style('font-size', '12px');
-}
-
-function createWeightChart(participants) {
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    const container = document.getElementById('weight-chart');
-    const width = container.clientWidth - margin.left - margin.right;
-    const height = container.clientHeight - margin.top - margin.bottom - 30;
-
-    const svg = d3.select('#weight-chart')
-        .append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Create weight groups (every 10 kg)
-    const weightGroups = d3.group(participants, d => Math.floor(d.weight / 10) * 10);
-    const data = Array.from(weightGroups, ([key, value]) => ({
-        weight: key,
-        count: value.length
-    })).sort((a, b) => a.weight - b.weight);
-
-    const x = d3.scaleBand()
-        .range([0, width])
-        .padding(0.1)
-        .domain(data.map(d => d.weight));
-
-    const y = d3.scaleLinear()
-        .range([height, 0])
-        .domain([0, d3.max(data, d => d.count)]);
-
-    svg.append('g')
-        .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(x).tickFormat(d => `${d}kg`));
-
-    svg.append('g')
-        .call(d3.axisLeft(y));
-
-    svg.selectAll('.bar')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar')
-        .attr('x', d => x(d.weight))
-        .attr('width', x.bandwidth())
-        .attr('y', d => y(d.count))
-        .attr('height', d => height - y(d.count))
-        .style('fill', '#2ecc71');
-}
-
-function createHeightChart(participants) {
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    const container = document.getElementById('height-chart');
-    const width = container.clientWidth - margin.left - margin.right;
-    const height = container.clientHeight - margin.top - margin.bottom - 30;
-
-    const svg = d3.select('#height-chart')
-        .append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Create height groups (every 5 cm)
-    const heightGroups = d3.group(participants, d => Math.floor(d.height / 5) * 5);
-    const data = Array.from(heightGroups, ([key, value]) => ({
-        height: key,
-        count: value.length
-    })).sort((a, b) => a.height - b.height);
-
-    const x = d3.scaleBand()
-        .range([0, width])
-        .padding(0.1)
-        .domain(data.map(d => d.height));
-
-    const y = d3.scaleLinear()
-        .range([height, 0])
-        .domain([0, d3.max(data, d => d.count)]);
-
-    svg.append('g')
-        .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(x).tickFormat(d => `${d}cm`));
-
-    svg.append('g')
-        .call(d3.axisLeft(y));
-
-    svg.selectAll('.bar')
-        .data(data)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar')
-        .attr('x', d => x(d.height))
-        .attr('width', x.bandwidth())
-        .attr('y', d => y(d.count))
-        .attr('height', d => height - y(d.count))
-        .style('fill', '#9b59b6');
-}
-
-function updateVisualization(currentTime, participants) {
-    // Update insights panel
-    const activeParticipants = participants.filter(p => p.timeSeriesData.some(d => d.time >= currentTime));
-    const stoppedParticipants = participants.filter(p => !p.timeSeriesData.some(d => d.time >= currentTime));
     
-    const insights = {
-        totalActive: activeParticipants.length,
-        totalStopped: stoppedParticipants.length,
-        averageAge: d3.mean(activeParticipants, d => d.age),
-        averageHR: d3.mean(activeParticipants, d => d.maxHR),
-        genderDistribution: {
-            male: activeParticipants.filter(d => d.gender === 'M').length,
-            female: activeParticipants.filter(d => d.gender === 'F').length
+    bars.append('rect')
+        .attr('class', 'bar')
+        .attr('y', d => yScale(d.category))
+        .attr('height', yScale.bandwidth())
+        .attr('x', 0)
+        .attr('width', d => xScale(d.value))
+        .attr('fill', d => d.category === 'Continuing' ? '#3498db' : '#e74c3c')
+        .on('mouseover', function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip.html(`
+                <strong>${d.category} Runners</strong><br/>
+                Count: ${d.value} runners<br/>
+                Percentage: ${d.percentage}% of total
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.8);
+        })
+        .on('mouseout', function() {
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1);
+        });
+        
+    // Add count labels inside the bars if there's enough space
+    bars.append('text')
+        .attr('class', 'value-label')
+        .attr('y', d => yScale(d.category) + yScale.bandwidth() / 2)
+        .attr('x', d => xScale(d.value) > 50 ? xScale(d.value) - 40 : xScale(d.value) + 5)
+        .attr('dy', '.35em')
+        .style('font-size', '12px')
+        .style('fill', d => xScale(d.value) > 50 ? 'white' : '#333')
+        .style('font-weight', 'bold')
+        .text(d => `${d.value}`);
+}
+
+// Create and update the age comparison chart
+function updateAgeComparisonChart(activeParticipants, stoppedParticipants) {
+    const chartContainer = document.getElementById('age-comparison-chart');
+    
+    // Clear previous chart
+    chartContainer.innerHTML = '';
+    
+    // Calculate mean ages
+    const activeMeanAge = d3.mean(activeParticipants, d => d.age);
+    const stoppedMeanAge = d3.mean(stoppedParticipants, d => d.age);
+    
+    // Skip if no data
+    if (!activeMeanAge && !stoppedMeanAge) return;
+    
+    // Set up dimensions
+    const margin = { top: 20, right: 30, bottom: 40, left: 100 };
+    const width = chartContainer.clientWidth - margin.left - margin.right;
+    const height = chartContainer.clientHeight - margin.top - margin.bottom - 20;
+    
+    // Create SVG
+    const svg = d3.select(chartContainer)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // Data for the chart
+    const data = [
+        { 
+            category: 'Continuing', 
+            value: activeMeanAge || 0, 
+            count: activeParticipants.length,
+            stdDev: d3.deviation(activeParticipants, d => d.age) || 0
+        },
+        { 
+            category: 'Stopped', 
+            value: stoppedMeanAge || 0, 
+            count: stoppedParticipants.length,
+            stdDev: d3.deviation(stoppedParticipants, d => d.age) || 0
         }
-    };
-
-    updateInsightsPanel(insights, currentTime);
-
-    // Update charts with dynamic data
-    updateDemographicCharts(activeParticipants, stoppedParticipants);
+    ];
+    
+    // X scale
+    const xScale = d3.scaleLinear()
+        .domain([0, d3.max([activeMeanAge || 0, stoppedMeanAge || 0]) * 1.1])
+        .range([0, width]);
+    
+    // Y scale
+    const yScale = d3.scaleBand()
+        .domain(data.map(d => d.category))
+        .range([0, height])
+        .padding(0.3);
+    
+    // Add X axis
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .attr('class', 'axis')
+        .call(d3.axisBottom(xScale).ticks(5))
+        .selectAll('text')
+        .style('text-anchor', 'middle');
+    
+    // Add X axis label
+    svg.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', height + margin.bottom - 5)
+        .style('font-size', '10px')
+        .text('Age (years)');
+    
+    // Add Y axis
+    svg.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(yScale));
+    
+    // Create tooltip
+    const tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+    
+    // Add bars
+    const bars = svg.selectAll('.bar')
+        .data(data)
+        .enter()
+        .append('g');
+    
+    bars.append('rect')
+        .attr('class', 'bar')
+        .attr('y', d => yScale(d.category))
+        .attr('height', yScale.bandwidth())
+        .attr('x', 0)
+        .attr('width', d => xScale(d.value))
+        .attr('fill', d => d.category === 'Continuing' ? '#3498db' : '#e74c3c')
+        .on('mouseover', function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip.html(`
+                <strong>${d.category} Runners</strong><br/>
+                Mean Age: ${d.value.toFixed(1)} years<br/>
+                Standard Deviation: ${d.stdDev.toFixed(1)}<br/>
+                Count: ${d.count} runners
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.8);
+        })
+        .on('mouseout', function() {
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1);
+        });
+        
+    // Add value labels
+    bars.append('text')
+        .attr('class', 'value-label')
+        .attr('y', d => yScale(d.category) + yScale.bandwidth() / 2)
+        .attr('x', d => xScale(d.value) > 50 ? xScale(d.value) - 40 : xScale(d.value) + 5)
+        .attr('dy', '.35em')
+        .style('font-size', '12px')
+        .style('fill', d => xScale(d.value) > 50 ? 'white' : '#333')
+        .style('font-weight', 'bold')
+        .text(d => `${d.value.toFixed(1)}`);
 }
 
-function updateInsightsPanel(insights, currentTime) {
-    const insightsHtml = `
-        <p>Current Time: ${Math.floor(currentTime / 60)} min ${Math.floor(currentTime % 60)} sec</p>
-        <p>Active Runners: ${insights.totalActive}</p>
-        <p>Stopped Runners: ${insights.totalStopped}</p>
-        <p>Average Age of Active Runners: ${insights.averageAge ? insights.averageAge.toFixed(1) : 'N/A'} years</p>
-        <p>Average Max HR of Active Runners: ${insights.averageHR ? insights.averageHR.toFixed(0) : 'N/A'} bpm</p>
-        <p>Gender Distribution (Active):
-            M: ${insights.genderDistribution.male},
-            F: ${insights.genderDistribution.female}
-        </p>
-    `;
-    document.getElementById('dynamic-insights').innerHTML = insightsHtml;
+// Create and update the gender comparison chart
+function updateGenderComparisonChart(activeParticipants, stoppedParticipants) {
+    const chartContainer = document.getElementById('gender-comparison-chart');
+    
+    // Clear previous chart
+    chartContainer.innerHTML = '';
+    
+    // Skip if no data
+    if (activeParticipants.length === 0 && stoppedParticipants.length === 0) return;
+    
+    // Calculate gender percentages
+    const activeMaleCount = activeParticipants.filter(d => d.gender === 'M').length;
+    const activeFemaleCount = activeParticipants.filter(d => d.gender === 'F').length;
+    const stoppedMaleCount = stoppedParticipants.filter(d => d.gender === 'M').length;
+    const stoppedFemaleCount = stoppedParticipants.filter(d => d.gender === 'F').length;
+    
+    const activeMalePercentage = activeParticipants.length > 0 ? (activeMaleCount / activeParticipants.length) * 100 : 0;
+    const activeFemalePercentage = activeParticipants.length > 0 ? (activeFemaleCount / activeParticipants.length) * 100 : 0;
+    const stoppedMalePercentage = stoppedParticipants.length > 0 ? (stoppedMaleCount / stoppedParticipants.length) * 100 : 0;
+    const stoppedFemalePercentage = stoppedParticipants.length > 0 ? (stoppedFemaleCount / stoppedParticipants.length) * 100 : 0;
+    
+    // Set up dimensions
+    const margin = { top: 25, right: 30, bottom: 40, left: 100 };
+    const width = chartContainer.clientWidth - margin.left - margin.right;
+    const height = chartContainer.clientHeight - margin.top - margin.bottom - 20;
+    
+    // Create SVG
+    const svg = d3.select(chartContainer)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // Data for the chart
+    const data = [
+        { 
+            category: 'Continuing', 
+            male: activeMalePercentage,
+            female: activeFemalePercentage,
+            maleCount: activeMaleCount,
+            femaleCount: activeFemaleCount,
+            total: activeParticipants.length
+        },
+        { 
+            category: 'Stopped', 
+            male: stoppedMalePercentage,
+            female: stoppedFemalePercentage,
+            maleCount: stoppedMaleCount,
+            femaleCount: stoppedFemaleCount,
+            total: stoppedParticipants.length
+        }
+    ];
+    
+    // X scale
+    const xScale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([0, width]);
+    
+    // Y scale
+    const yScale = d3.scaleBand()
+        .domain(data.map(d => d.category))
+        .range([0, height])
+        .padding(0.3);
+    
+    // Add X axis
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .attr('class', 'axis')
+        .call(d3.axisBottom(xScale).ticks(5))
+        .selectAll('text')
+        .style('text-anchor', 'middle');
+    
+    // Add X axis label
+    svg.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', height + margin.bottom - 5)
+        .style('font-size', '10px')
+        .text('Gender Percentage (%)');
+    
+    // Add Y axis
+    svg.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(yScale));
+    
+    // Create tooltip
+    const tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+    
+    // Add male bars
+    const maleBars = svg.selectAll('.male-bar')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('y', d => yScale(d.category))
+        .attr('height', yScale.bandwidth())
+        .attr('x', 0)
+        .attr('width', d => xScale(d.male))
+        .attr('fill', '#3498db')  // Blue for males
+        .on('mouseover', function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip.html(`
+                <strong>${d.category} Runners - Male</strong><br/>
+                Percentage: ${d.male.toFixed(1)}%<br/>
+                Count: ${d.maleCount} out of ${d.total}
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.8);
+        })
+        .on('mouseout', function() {
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1);
+        });
+    
+    // Add female bars
+    const femaleBars = svg.selectAll('.female-bar')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('y', d => yScale(d.category))
+        .attr('height', yScale.bandwidth())
+        .attr('x', d => xScale(d.male))
+        .attr('width', d => xScale(d.female))
+        .attr('fill', '#e74c3c')  // Red for females
+        .on('mouseover', function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip.html(`
+                <strong>${d.category} Runners - Female</strong><br/>
+                Percentage: ${d.female.toFixed(1)}%<br/>
+                Count: ${d.femaleCount} out of ${d.total}
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.8);
+        })
+        .on('mouseout', function() {
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1);
+        });
+        
+    // Add labels for the percentages
+    data.forEach(d => {
+        // Add male percentage
+        if (d.male > 10) {
+            svg.append('text')
+                .attr('class', 'value-label')
+                .attr('y', yScale(d.category) + yScale.bandwidth() / 2)
+                .attr('x', xScale(d.male / 2))
+                .attr('dy', '.35em')
+                .attr('text-anchor', 'middle')
+                .style('font-size', '11px')
+                .style('fill', 'white')
+                .style('font-weight', 'bold')
+                .text(`${Math.round(d.male)}% M`);
+        }
+        
+        // Add female percentage
+        if (d.female > 10) {
+            svg.append('text')
+                .attr('class', 'value-label')
+                .attr('y', yScale(d.category) + yScale.bandwidth() / 2)
+                .attr('x', xScale(d.male + d.female / 2))
+                .attr('dy', '.35em')
+                .attr('text-anchor', 'middle')
+                .style('font-size', '11px')
+                .style('fill', 'white')
+                .style('font-weight', 'bold')
+                .text(`${Math.round(d.female)}% F`);
+        }
+    });
+    
+    // Add legend
+    const legendData = [
+        { label: 'Male', color: '#3498db' },
+        { label: 'Female', color: '#e74c3c' }
+    ];
+    
+    const legend = svg.selectAll('.legend')
+        .data(legendData)
+        .enter()
+        .append('g')
+        .attr('class', 'legend')
+        .attr('transform', (d, i) => `translate(${width - 100 + i * 50}, -20)`);
+    
+    legend.append('rect')
+        .attr('width', 15)
+        .attr('height', 15)
+        .attr('fill', d => d.color);
+    
+    legend.append('text')
+        .attr('x', 20)
+        .attr('y', 7.5)
+        .attr('dy', '.35em')
+        .style('font-size', '11px')
+        .text(d => d.label);
 }
 
-function updateDemographicCharts(activeParticipants, stoppedParticipants) {
-    // Calculate averages and proportions
-    const calculateAverages = (group) => {
-        const avgAge = d3.mean(group, d => d.age);
-        const avgWeight = d3.mean(group, d => d.weight);
-        const avgHeight = d3.mean(group, d => d.height);
-        const genderProportion = d3.rollup(group, v => v.length / group.length, d => d.gender);
-        return { avgAge, avgWeight, avgHeight, genderProportion };
-    };
+// Create and update the height comparison chart
+function updateHeightComparisonChart(activeParticipants, stoppedParticipants) {
+    const chartContainer = document.getElementById('height-comparison-chart');
+    
+    // Clear previous chart
+    chartContainer.innerHTML = '';
+    
+    // Calculate mean heights
+    const activeMeanHeight = d3.mean(activeParticipants, d => d.height);
+    const stoppedMeanHeight = d3.mean(stoppedParticipants, d => d.height);
+    
+    // Skip if no data
+    if (!activeMeanHeight && !stoppedMeanHeight) return;
+    
+    // Set up dimensions
+    const margin = { top: 20, right: 30, bottom: 40, left: 100 };
+    const width = chartContainer.clientWidth - margin.left - margin.right;
+    const height = chartContainer.clientHeight - margin.top - margin.bottom - 20;
+    
+    // Create SVG
+    const svg = d3.select(chartContainer)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // Data for the chart
+    const data = [
+        { 
+            category: 'Continuing', 
+            value: activeMeanHeight || 0, 
+            count: activeParticipants.length,
+            stdDev: d3.deviation(activeParticipants, d => d.height) || 0
+        },
+        { 
+            category: 'Stopped', 
+            value: stoppedMeanHeight || 0, 
+            count: stoppedParticipants.length,
+            stdDev: d3.deviation(stoppedParticipants, d => d.height) || 0
+        }
+    ];
+    
+    // X scale
+    const xScale = d3.scaleLinear()
+        .domain([0, d3.max([activeMeanHeight || 0, stoppedMeanHeight || 0]) * 1.1])
+        .range([0, width]);
+    
+    // Y scale
+    const yScale = d3.scaleBand()
+        .domain(data.map(d => d.category))
+        .range([0, height])
+        .padding(0.3);
+    
+    // Add X axis
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .attr('class', 'axis')
+        .call(d3.axisBottom(xScale).ticks(5))
+        .selectAll('text')
+        .style('text-anchor', 'middle');
+    
+    // Add X axis label
+    svg.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', height + margin.bottom - 5)
+        .style('font-size', '10px')
+        .text('Height (inches)');
+    
+    // Add Y axis
+    svg.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(yScale));
+    
+    // Create tooltip
+    const tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+    
+    // Add bars
+    const bars = svg.selectAll('.bar')
+        .data(data)
+        .enter()
+        .append('g');
+    
+    bars.append('rect')
+        .attr('class', 'bar')
+        .attr('y', d => yScale(d.category))
+        .attr('height', yScale.bandwidth())
+        .attr('x', 0)
+        .attr('width', d => xScale(d.value))
+        .attr('fill', d => d.category === 'Continuing' ? '#3498db' : '#e74c3c')
+        .on('mouseover', function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip.html(`
+                <strong>${d.category} Runners</strong><br/>
+                Mean Height: ${d.value.toFixed(1)} inches<br/>
+                Standard Deviation: ${d.stdDev.toFixed(1)}<br/>
+                Count: ${d.count} runners
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.8);
+        })
+        .on('mouseout', function() {
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1);
+        });
+        
+    // Add value labels
+    bars.append('text')
+        .attr('class', 'value-label')
+        .attr('y', d => yScale(d.category) + yScale.bandwidth() / 2)
+        .attr('x', d => xScale(d.value) > 50 ? xScale(d.value) - 40 : xScale(d.value) + 5)
+        .attr('dy', '.35em')
+        .style('font-size', '12px')
+        .style('fill', d => xScale(d.value) > 50 ? 'white' : '#333')
+        .style('font-weight', 'bold')
+        .text(d => `${d.value.toFixed(1)}`);
+}
 
-    const activeStats = calculateAverages(activeParticipants);
-    const stoppedStats = calculateAverages(stoppedParticipants);
-
-    // Update charts with new data
-    // Assume functions updateAgeChart, updateWeightChart, updateHeightChart, updateGenderChart exist
-    updateAgeChart(activeStats.avgAge, stoppedStats.avgAge);
-    updateWeightChart(activeStats.avgWeight, stoppedStats.avgWeight);
-    updateHeightChart(activeStats.avgHeight, stoppedStats.avgHeight);
-    updateGenderChart(activeStats.genderProportion, stoppedStats.genderProportion);
+// Create and update the weight comparison chart
+function updateWeightComparisonChart(activeParticipants, stoppedParticipants) {
+    const chartContainer = document.getElementById('weight-comparison-chart');
+    
+    // Clear previous chart
+    chartContainer.innerHTML = '';
+    
+    // Calculate mean weights
+    const activeMeanWeight = d3.mean(activeParticipants, d => d.weight);
+    const stoppedMeanWeight = d3.mean(stoppedParticipants, d => d.weight);
+    
+    // Skip if no data
+    if (!activeMeanWeight && !stoppedMeanWeight) return;
+    
+    // Set up dimensions
+    const margin = { top: 20, right: 30, bottom: 40, left: 100 };
+    const width = chartContainer.clientWidth - margin.left - margin.right;
+    const height = chartContainer.clientHeight - margin.top - margin.bottom - 20;
+    
+    // Create SVG
+    const svg = d3.select(chartContainer)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // Data for the chart
+    const data = [
+        { 
+            category: 'Continuing', 
+            value: activeMeanWeight || 0, 
+            count: activeParticipants.length,
+            stdDev: d3.deviation(activeParticipants, d => d.weight) || 0
+        },
+        { 
+            category: 'Stopped', 
+            value: stoppedMeanWeight || 0, 
+            count: stoppedParticipants.length,
+            stdDev: d3.deviation(stoppedParticipants, d => d.weight) || 0
+        }
+    ];
+    
+    // X scale
+    const xScale = d3.scaleLinear()
+        .domain([0, d3.max([activeMeanWeight || 0, stoppedMeanWeight || 0]) * 1.1])
+        .range([0, width]);
+    
+    // Y scale
+    const yScale = d3.scaleBand()
+        .domain(data.map(d => d.category))
+        .range([0, height])
+        .padding(0.3);
+    
+    // Add X axis
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .attr('class', 'axis')
+        .call(d3.axisBottom(xScale).ticks(5))
+        .selectAll('text')
+        .style('text-anchor', 'middle');
+    
+    // Add X axis label
+    svg.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', height + margin.bottom - 5)
+        .style('font-size', '10px')
+        .text('Weight (lbs)');
+    
+    // Add Y axis
+    svg.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(yScale));
+    
+    // Create tooltip
+    const tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+    
+    // Add bars
+    const bars = svg.selectAll('.bar')
+        .data(data)
+        .enter()
+        .append('g');
+    
+    bars.append('rect')
+        .attr('class', 'bar')
+        .attr('y', d => yScale(d.category))
+        .attr('height', yScale.bandwidth())
+        .attr('x', 0)
+        .attr('width', d => xScale(d.value))
+        .attr('fill', d => d.category === 'Continuing' ? '#3498db' : '#e74c3c')
+        .on('mouseover', function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style('opacity', .9);
+            tooltip.html(`
+                <strong>${d.category} Runners</strong><br/>
+                Mean Weight: ${d.value.toFixed(1)} lbs<br/>
+                Standard Deviation: ${d.stdDev.toFixed(1)}<br/>
+                Count: ${d.count} runners
+            `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 0.8);
+        })
+        .on('mouseout', function() {
+            tooltip.transition()
+                .duration(500)
+                .style('opacity', 0);
+            
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style('opacity', 1);
+        });
+        
+    // Add value labels
+    bars.append('text')
+        .attr('class', 'value-label')
+        .attr('y', d => yScale(d.category) + yScale.bandwidth() / 2)
+        .attr('x', d => xScale(d.value) > 50 ? xScale(d.value) - 40 : xScale(d.value) + 5)
+        .attr('dy', '.35em')
+        .style('font-size', '12px')
+        .style('fill', d => xScale(d.value) > 50 ? 'white' : '#333')
+        .style('font-weight', 'bold')
+        .text(d => `${d.value.toFixed(1)}`);
 }
