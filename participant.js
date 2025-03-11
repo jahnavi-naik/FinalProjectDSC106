@@ -73,9 +73,12 @@ function displayDemographics(data) {
 }
 
 function displayConditions(data) {
+    // Convert temperature from Celsius to Fahrenheit
+    const tempInFahrenheit = (data.temperature * 9/5) + 32;
+    
     const conditions = document.getElementById('conditions');
     conditions.innerHTML = `
-        <p><strong>Temperature:</strong> ${data.temperature.toFixed(1)}°F</p>
+        <p><strong>Temperature:</strong> ${tempInFahrenheit.toFixed(1)}°F</p>
         <p><strong>Humidity:</strong> ${data.humidity.toFixed(1)}%</p>
     `;
 }
@@ -104,7 +107,11 @@ function displayRankings(data, allData) {
     const getPercentile = (value, group) => {
         const sortedValues = group.map(p => p.endurance).sort((a, b) => a - b);
         const index = sortedValues.findIndex(v => v >= value);
-        return ((1 - (index / sortedValues.length)) * 100).toFixed(1);
+        // Calculate percentile (0-100 scale)
+        const percentRank = ((1 - (index / sortedValues.length)) * 100);
+        
+        // Return the ordinal percentile (e.g., 0.02th, 99.8th)
+        return (100 - percentRank).toFixed(2);
     };
 
     const totalPercentile = getPercentile(data.endurance, allData);
@@ -114,11 +121,11 @@ function displayRankings(data, allData) {
     const heightPercentile = getPercentile(data.endurance, heightGroup);
 
     rankings.innerHTML = `
-        <p><strong>Overall:</strong> Top ${totalPercentile}%</p>
-        <p><strong>Among ${data.gender === 'F' ? 'Females' : 'Males'}:</strong> Top ${genderPercentile}%</p>
-        <p><strong>Age Group:</strong> Top ${agePercentile}%</p>
-        <p><strong>Weight Group:</strong> Top ${weightPercentile}%</p>
-        <p><strong>Height Group:</strong> Top ${heightPercentile}%</p>
+        <p><strong>Overall:</strong> ${totalPercentile}th percentile</p>
+        <p><strong>Among ${data.gender === 'F' ? 'Females' : 'Males'}:</strong> ${genderPercentile}th percentile</p>
+        <p><strong>Age Group:</strong> ${agePercentile}th percentile</p>
+        <p><strong>Weight Group:</strong> ${weightPercentile}th percentile</p>
+        <p><strong>Height Group:</strong> ${heightPercentile}th percentile</p>
     `;
 }
 
@@ -128,7 +135,6 @@ function createTimeSeriesCharts(data) {
         { id: 'hr', label: 'Heart Rate (bpm)', color: '#ee72c4' },
         { id: 'rr', label: 'Respiratory Rate', color: '#6c90b0' },
         { id: 've', label: 'Ventilation', color: '#76323f' },
-        { id: 'vo2', label: 'VO2', color: '#c09f80' },
         { id: 'vco2', label: 'VCO2', color: '#3e4444' }
     ];
 
