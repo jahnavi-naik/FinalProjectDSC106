@@ -197,7 +197,7 @@ function createVisualization(participants, rawData) {
         updateAverageSpeed(currentTime);
 
         updateAnchoredText(currentTime);
-
+    
         // Update visualizations based on current time
         createStackedBarChart(participants, currentTime);
         // updateAllCharts(participants, currentTime);
@@ -251,7 +251,7 @@ function createVisualization(participants, rawData) {
         .append('xhtml:div')  // Use 'xhtml' to access HTML elements inside SVG
         .attr('class', 'text-box-content')  // Add a separate class to the content div
         .html('<p>Between 2008 and 2018, researchers at the University of Málaga conducted graded exercise tests (GETs) to investigate how respiratory systems perform under extreme physical exertion. Our webpage presents the results of 857 participants. Scroll to the right to explore!</p>');
-        
+
     const iconSize = 22;  // Size of the icon
     const dots = timelineSvg.selectAll('.runner')
         .data(stackedParticipants)
