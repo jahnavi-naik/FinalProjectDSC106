@@ -13,6 +13,37 @@ body {
 
 #header {
     margin: 1em;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    padding-top: 3rem; /* Add space at the top for the button */
+}
+
+#main-title {
+    font-size: 2.2rem; /* Slightly reduce font size */
+    color: #76323f;
+    text-align: center;
+    margin: 0.5rem 0 1.5rem 0; /* Increased bottom margin */
+    letter-spacing: 1px;
+    font-weight: 600;
+    position: relative;
+    max-width: 90%; /* Limit width to prevent wrapping issues */
+    line-height: 1.2; /* Improve line height for multi-line titles */
+}
+
+#main-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background-color: #76323f;
+    border-radius: 2px;
 }
 
 .timeline-container {
@@ -77,7 +108,7 @@ body {
 
 .dashboard {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     width: 100%;
 }
@@ -120,17 +151,20 @@ body {
     pointer-events: none;
 }
 
-#time-display, #speed-display{
+#time-display, #speed-display {
     display: flex;
-    gap: 2px;
+    gap: 5px;
     text-align: center;
     justify-content: center;
-    align-items: center; 
+    align-items: center;
+    margin: 0 10px;
 }
 
 p.time, p.speed {
-    margin-right: 10px;
+    margin-right: 5px;
     color: #333;
+    font-size: 0.95em;
+    white-space: nowrap;
 }
 
 #time, #speed {
@@ -140,25 +174,25 @@ p.time, p.speed {
     letter-spacing: 1.25px;
     color: #FFF;
     background-color: #76323f;
-    width: 120px;
+    min-width: 120px;
     height: 30px;
-    padding-left: 10px;
-    padding-right: 10px;
+    padding: 0 15px;
     border-radius: 5px;
+    font-weight: bold;
 }
 
 
 a.button {
     position: absolute;
     top: 10px;
-    right: 10px;
+    right: 20px;
     margin: 3px;
     padding: 10px 15px;
     height: 30px;
     color: #76323f;
     border: 1.2px solid #76323f;
     background-color: white;
-    font-size: 1em;
+    font-size: 0.9em;
     text-decoration: none;
     border-radius: 6px;
     cursor: pointer;
@@ -167,6 +201,7 @@ a.button {
     align-items: center;
     justify-content: center;
     font-weight: bold;
+    z-index: 10; /* Ensure button stays on top */
 }
 
 a.button:hover {
@@ -244,6 +279,9 @@ a.button:hover {
     align-items: center; /* Align items vertically */
     font-size: 1em; /* Adjust as needed */
     font-weight: bold;
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: center;
 }
 
 #bottom {
@@ -318,3 +356,4 @@ a.button:hover {
     font-size: 1.3em;
     color: #FFF;
 }
+

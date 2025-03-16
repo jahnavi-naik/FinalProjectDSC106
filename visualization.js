@@ -119,7 +119,7 @@ function createVisualization(participants, rawData) {
         { text: "These tests allow researchers to evaluate cardiovascular, respiratory, and metabolic responses to maximal exertion.", start: 160, end: 220, type: 1 },
         { text: "As you scroll, pay attention to the progressively increasing speed. These exercise tests typically began with a 3 mph warm-up walk, followed by speed increments of either 0.3 or 0.6 mph.", start: 250, end: 320, type: 1 },
         { text: "Each icon represents a participant who has reached their maximum effort—blue for males and pink for females. As we approach the 7-minute mark, the first group of participants reaches their limit. Hover over an icon for a brief description, or click to explore detailed insights.", start: 350, end: 450, type: 1 },
-        { text: "Approaching the 9-minute mark, more and more participants reach their maximum effort, with a majority being women.", start: 510, end: 600, type: 1 },
+        { text: "Approaching the 9-minute mark, more and more participants reach their maximum effort.", start: 510, end: 600, type: 1 },
         { text: "At 12 minutes and 48 seconds, approximately 25% of participants have reached their physiological limits.", start: 715, end: 765, type: 2},
         { text: "As we approach 14 minutes, waves of participants end the test. Scroll up to view all the data.", start: 825, end: 885, type: 2 },
         { text: "Runners who are still active at the 18-minute mark are in the 90th percentile of this study.", start: 1070, end: 1110, type: 2 },
@@ -197,7 +197,7 @@ function createVisualization(participants, rawData) {
         updateAverageSpeed(currentTime);
 
         updateAnchoredText(currentTime);
-
+    
         // Update visualizations based on current time
         createStackedBarChart(participants, currentTime);
         // updateAllCharts(participants, currentTime);
@@ -251,7 +251,7 @@ function createVisualization(participants, rawData) {
         .append('xhtml:div')  // Use 'xhtml' to access HTML elements inside SVG
         .attr('class', 'text-box-content')  // Add a separate class to the content div
         .html('<p>Between 2008 and 2018, researchers at the University of Málaga conducted graded exercise tests (GETs) to investigate how respiratory systems perform under extreme physical exertion. Our webpage presents the results of 857 participants. Scroll to the right to explore!</p>');
-        
+
     const iconSize = 22;  // Size of the icon
     const dots = timelineSvg.selectAll('.runner')
         .data(stackedParticipants)
