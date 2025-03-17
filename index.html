@@ -14,7 +14,6 @@
 
     <div id="header">
         <h1 id="main-title">Running the Numbers: A Data-Driven Look at Treadmill Performance</h1>
-        <a href="./writeup/writeup.pdf" target="_blank" class="button"> VIEW OUR DESIGN RATIONALE </a>
         <div id="live-stats">
             <div id="time-display">
                 <p class="time">TIME: </p>
@@ -37,7 +36,7 @@
 
     <div id="bottom">
 
-        <p class="dash-title"> LIVE STATS: </p>
+        <p class="bottom-title"> LIVE STATS: </p>
 
         <div class="dashboard">
             <div id="active-chart" class="chart-container"></div>
@@ -57,8 +56,39 @@
 
                 </div>
             </div>
-
         </div>
+
+        <br>
+
+        <div id="find-runner">
+            <p class="bottom-title"> FIND YOUR CLOSEST MATCH: </p>
+            <div id="similarity-search">
+                <p> Curious where you might stack up? Fill in the form below to find your closest match!</p>
+                <form id="similarityForm">
+                    <div class="form-group">
+                        <label for="age">Age:</label>
+                        <input type="number" id="age" required min="10" max="65">
+                    </div>
+                    <div class="form-group">
+                        <label for="weight">Weight (lbs):</label>
+                        <input type="number" id="weight" required min="90" max="300">
+                    </div>
+                    <div class="form-group">
+                        <label for="height">Height (in):</label>
+                        <input type="number" id="height" required min="56" max="82">
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender:</label>
+                        <select id="gender" required>
+                            <option value="F">Female</option>
+                            <option value="M">Male</option>
+                        </select>
+                    </div>
+                    <button type="submit">Find Similar Runner</button>
+                </form>
+            </div>
+        </div>
+        
     </div>
 
 </body>

@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         createVisualization(participantData, rawData);
 
         // Add similarity search form
-        // createSimilaritySearchForm(participantData);
+        createSimilaritySearchForm(participantData);
 
         // Check if we need to restore scroll position and highlight
         const savedScroll = sessionStorage.getItem('timelineScroll');
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (lastViewedParticipant) {
                     // Find and highlight the last viewed participant
-                    highlightParticipant(lastViewedParticipant);
+                    highlightParticipant(lastViewedParticipant, false);
                 } else if (savedScroll) {
                     // Just restore the scroll position
                     timeline.scrollLeft = savedScroll;
@@ -109,7 +109,7 @@ function createVisualization(participants, rawData) {
         .attr('x', 0)
         .attr('y', -margin.top)
         .attr('width', 0)  // Initially set width to 0
-        .attr('height', height + 120 + margin.bottom)
+        .attr('height', height + 200 + margin.bottom)
         .style('fill', 'rgba(160, 160, 160, 0.1)') // Light shading
         .style('pointer-events', 'none'); // Make sure it doesn't interfere with interaction
 
@@ -142,10 +142,15 @@ function createVisualization(participants, rawData) {
         { text: "These tests allow researchers to evaluate cardiovascular, respiratory, and metabolic responses to maximal exertion.", start: 160, end: 220, type: 1 },
         { text: "As you scroll, pay attention to the progressively increasing speed. These exercise tests typically began with a 3 mph warm-up walk, followed by speed increments of either 0.3 or 0.6 mph.", start: 250, end: 320, type: 1 },
         { text: "Each icon represents a participant who has reached their maximum effort—blue for males and pink for females. As we approach the 7-minute mark, the first group of participants reaches their limit. Hover over an icon for a brief description, or click to explore detailed insights.", start: 350, end: 450, type: 1 },
-        { text: "Approaching the 9-minute mark, more and more participants reach their maximum effort, with a majority being women.", start: 510, end: 600, type: 1 },
+        { text: "Approaching the 9-minute mark, more and more participants reach their maximum effort. Hover over the dynamic bars on the bottom to view the exact numbers.", start: 510, end: 600, type: 1 },
         { text: "At 12 minutes and 48 seconds, approximately 25% of participants have reached their physiological limits.", start: 715, end: 765, type: 2},
-        { text: "As we approach 14 minutes, waves of participants end the test. Scroll up to view all the data.", start: 825, end: 885, type: 2 },
+        { text: "As we approach 14 minutes, waves of participants reach their limits. Scroll up to view all the data.", start: 825, end: 885, type: 2 },
         { text: "Runners who are still active at the 18-minute mark are in the 90th percentile of this study.", start: 1070, end: 1110, type: 2 },
+        { text: "Achieving an endurance time of 19:48, Runner #395 is our last standing female participant. Approximately 5% of male participants remain at this point.", start: 1175, end: 1230, type: 1 },
+        { text: "This leading group of male participants persists for approximately five more minutes. ", start: 1270, end: 1350, type: 1 },
+        { text: "The longest recorded endurance time in this study is 24:52. These results highlight a significant biological advantage in men, particularly in terms of endurance and overall physical performance.", start: 1400, end: 1510, type: 1 }
+
+
     ];
 
     // Function to update the anchored text based on currentTime
@@ -220,7 +225,7 @@ function createVisualization(participants, rawData) {
         updateAverageSpeed(currentTime);
 
         updateAnchoredText(currentTime);
-    
+
         // Update visualizations based on current time
         createStackedBarChart(participants, currentTime);
 
@@ -247,7 +252,7 @@ function createVisualization(participants, rawData) {
         .join('text')
         .attr('class', 'time-label')
         .attr('x', d => xScale(d))
-        .attr('y', height + 119) // Bottom labels
+        .attr('y', height + 199) // Bottom labels
         .attr('text-anchor', 'middle')
         .text(d => {
             const minutes = String(Math.floor(d / 60)).padStart(2, '0');
@@ -271,24 +276,30 @@ function createVisualization(participants, rawData) {
 
     timelineSvg.append('foreignObject')
         .attr('class', 'text-box')  // Add class to the foreignObject
-        .attr('transform', 'translate(100, 190)')
+        .attr('transform', 'translate(100, 240)')
         .append('xhtml:div')  // Use 'xhtml' to access HTML elements inside SVG
         .attr('class', 'text-box-content')  // Add a separate class to the content div
         .html('<p>Between 2008 and 2018, researchers at the University of Málaga conducted graded exercise tests (GETs) to investigate how respiratory systems perform under extreme physical exertion. Our webpage presents the results of 819 participants. Scroll to the right to explore!</p>');
         
     const iconSize = 22;  // Size of the icon
-    const dots = timelineSvg.selectAll('.runner')
+    const dots = timelineSvg.selectAll('.runner-group')
         .data(stackedParticipants)
         .enter()
-        .append('image')
-        .attr('class', 'runner')
+        .append('g')  // Wrap each image in a <g> element
+        .attr('class', 'runner-group') 
         .attr('data-id', d => d.id)
-        .attr('x', d => xScale(Math.round(d.endurance / 5) * 5) - iconSize / 2)
-        .attr('y', d => (height+ 100) - (d.stackIndex + 1) * verticalSpacing)  
+        .attr('transform', d => 
+            `translate(${xScale(Math.round(d.endurance / 5) * 5) - iconSize / 2}, 
+                    ${(height + 185) - (d.stackIndex + 1) * verticalSpacing})`
+        );
+
+    dots.append('image')
+        .attr('class', 'runner') 
         .attr('width', iconSize)
         .attr('height', iconSize)
         .attr('xlink:href', d => d.gender === 'F' ? 'icons/female-icon.svg' : 'icons/male-icon.svg')
         .style('opacity', 1);
+
 
     // Enhanced tooltip to show stack information
     const tooltip = d3.select('body')
@@ -352,12 +363,12 @@ function createVisualization(participants, rawData) {
     milestoneMarkers.append('line')
         .attr('class', 'milestone-line')
         .attr('y1', 0)
-        .attr('y2', height + 120);
+        .attr('y2', height + 200);
 
     milestoneMarkers.append('text')
         .attr('class', 'milestone-text')
         .attr('x', 10) 
-        .attr('y', 100)  
+        .attr('y', 180)  
         .attr('dy', '0.35em')  // Vertical alignment for better positioning
         .style('text-anchor', 'start')  // Align text starting point to the left
         .text(d => d.description);
@@ -397,277 +408,229 @@ function calculateMilestones(data) {
 }
 
 function createStackedBarChart(participants, currentTime) {
+    function renderChart() {
+        const totalParticipants = participants.length;
 
-    const totalParticipants = participants.length;
+        const activeParticipants = participants.filter(p => p.endurance >= currentTime);
+        const inactiveParticipants = participants.filter(p => p.endurance < currentTime);
 
-    const activeParticipants = participants.filter(p => p.endurance >= currentTime);
-    const inactiveParticipants = participants.filter(p => p.endurance < currentTime);
+        const genderBreakdown = {
+            active: {
+                male: activeParticipants.filter(p => p.gender === 'M').length,
+                female: activeParticipants.filter(p => p.gender === 'F').length
+            },
+            inactive: {
+                male: inactiveParticipants.filter(p => p.gender === 'M').length,
+                female: inactiveParticipants.filter(p => p.gender === 'F').length
+            }
+        };
 
-    const genderBreakdown = {
-        active: {
-            male: activeParticipants.filter(p => p.gender === 'M').length,
-            female: activeParticipants.filter(p => p.gender === 'F').length
-        },
-        inactive: {
-            male: inactiveParticipants.filter(p => p.gender === 'M').length,
-            female: inactiveParticipants.filter(p => p.gender === 'F').length
+        const percentActiveFemale = (genderBreakdown.active.female / (genderBreakdown.active.female + genderBreakdown.inactive.female)) * 100;
+        const percentActiveMale = (genderBreakdown.active.male / (genderBreakdown.active.male + genderBreakdown.inactive.male)) * 100;
+        const percentInactiveFemale = (genderBreakdown.inactive.female / (genderBreakdown.active.female + genderBreakdown.inactive.female)) * 100;
+        const percentInactiveMale = (genderBreakdown.inactive.male / (genderBreakdown.active.male + genderBreakdown.inactive.male)) * 100;
+
+        const data = [
+            { category: 'Active', 
+                male: genderBreakdown.active.male, 
+                female: genderBreakdown.active.female,
+                percentFemale: percentActiveFemale.toFixed(1),
+                percentMale: percentActiveMale.toFixed(1)
+            },
+            { category: 'Inactive', 
+                male: genderBreakdown.inactive.male, 
+                female: genderBreakdown.inactive.female,
+                percentFemale: percentInactiveFemale.toFixed(1),
+                percentMale: percentInactiveMale.toFixed(1) 
+            }
+        ];
+
+        // Get container dimensions
+        const container = d3.select('#active-chart');
+        const width = container.node().clientWidth;
+        const height = container.node().clientHeight;
+
+        const margin = { top: 20, right: 110, bottom: 50, left: 80 };
+        const chartWidth = width - margin.left - margin.right;
+        const chartHeight = height - margin.top - margin.bottom;
+
+        // Select or create SVG
+        const svg = container.selectAll('svg')
+            .data([null])
+            .join('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+        // Add or select the chart group
+        let chartGroup = svg.select('.chart-group');
+        if (chartGroup.empty()) {
+            chartGroup = svg.append('g')
+                .attr('class', 'chart-group')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
         }
-    };
 
-    const percentActiveFemale = (genderBreakdown.active.female / (genderBreakdown.active.female + genderBreakdown.inactive.female)) * 100;
-    const percentActiveMale = (genderBreakdown.active.male / (genderBreakdown.active.male + genderBreakdown.inactive.male)) * 100;
-    const percentInactiveFemale = (genderBreakdown.inactive.female / (genderBreakdown.active.female + genderBreakdown.inactive.female)) * 100;
-    const percentInactiveMale = (genderBreakdown.inactive.male / (genderBreakdown.active.male + genderBreakdown.inactive.male)) * 100;
+        // Scales
+        const xScale = d3.scaleLinear()
+            .domain([0, totalParticipants])
+            .range([0, chartWidth]);
 
+        const yScale = d3.scaleBand()
+            .domain(data.map(d => d.category))
+            .range([0, chartHeight])
+            .padding(0.5);
 
-    const data = [
-        { category: 'Active', 
-            male: genderBreakdown.active.male, 
-            female: genderBreakdown.active.female,
-            percentFemale: percentActiveFemale.toFixed(1),
-            percentMale: percentActiveMale.toFixed(1)
-        },
-        { category: 'Inactive', 
-            male: genderBreakdown.inactive.male, 
-            female: genderBreakdown.inactive.female,
-            percentFemale: percentInactiveFemale.toFixed(1),
-            percentMale: percentInactiveMale.toFixed(1) 
+        // Axes
+        const proportionTicks = Array.from({ length: 6 }, (_, i) => (i / 5) * totalParticipants);
+
+        const xAxis = d3.axisBottom(xScale)
+            .tickValues(proportionTicks)
+            .tickSize(4)
+            .tickFormat(d => `${((d / totalParticipants) * 100).toFixed(0)}%`);
+
+        // Append x-axis if not exists
+        let xAxisGroup = chartGroup.select('.x-axis');
+        if (xAxisGroup.empty()) {
+            xAxisGroup = chartGroup.append('g')
+                .attr('class', 'x-axis')
+                .attr('transform', `translate(0, ${chartHeight})`);
         }
-    ];
+        xAxisGroup.call(xAxis);
 
-    // Get the container size dynamically
-    const container = d3.select('#active-chart');
-    const width = container.node().clientWidth; // Get width of the container
-    const height = container.node().clientHeight;
+        // Append x-axis label if not exists
+        let xAxisLabel = chartGroup.select('.x-axis-label');
+        if (xAxisLabel.empty()) {
+            xAxisLabel = chartGroup.append('text')
+                .attr('class', 'x-axis-label')
+                .style('font-size', '0.9em')
+                .attr('text-anchor', 'middle')
+                .attr('y', chartHeight + 40)  // Positioning below the x-axis
+                .style('fill', '#333')
+                .text('Proportion');
+        }
+        // Update x-axis label position on resize
+        xAxisLabel
+            .attr('x', chartWidth / 2)  // Ensure it is always in the middle
+            .attr('y', chartHeight + 30);  // Ensure it is positioned below the x-axis
 
-    // Set margins and chart dimensions
-    const margin = { top: 20, right: 110, bottom: 50, left: 80 };
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
+        const yAxis = d3.axisLeft(yScale).tickSize(4);
 
-    // Check if this is the first time creating the chart
-    const isFirstLoad = !d3.select('#active-chart svg').size();
+        // Append y-axis if not exists
+        let yAxisGroup = chartGroup.select('.y-axis');
+        if (yAxisGroup.empty()) {
+            yAxisGroup = chartGroup.append('g')
+                .attr('class', 'y-axis')
+        }
+        yAxisGroup.call(yAxis);
 
-    // Only clear SVG on first load
-    if (isFirstLoad) {
-        d3.select('#active-chart').html('');
-    }
+        // Bar groups
+        const groups = chartGroup.selectAll('.bar-group')
+            .data(data)
+            .join('g')
+            .attr('class', 'bar-group')
+            .attr('transform', d => `translate(0, ${yScale(d.category)})`);
 
-    const svg = d3.select('#active-chart')
-        .selectAll('svg')
-        .data([null])
-        .join('svg')
-        .attr('width', width)
-        .attr('height', height);
-
-    // Add or select the chart group
-    let chartGroup = svg.select('.chart-group');
-    
-    // If first load, create the chart group, otherwise use existing
-    if (chartGroup.empty()) {
-        chartGroup = svg.append('g')
-            .attr('class', 'chart-group')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
-    }
-
-    const xScale = d3.scaleLinear()
-        .domain([0, totalParticipants])
-        .range([0, chartWidth]);
-
-    const yScale = d3.scaleBand()
-        .domain(data.map(d => d.category))
-        .range([0, chartHeight])
-        .padding(0.5);
-
-    // Create x-axis with proportion ticks at 0.2 intervals
-    const proportionTicks = [];
-    for (let i = 0; i <= 10; i += 2) {
-        proportionTicks.push(totalParticipants * (i / 10)); // This is still in raw count values
-    }
-
-    const xAxis = d3.axisBottom(xScale)
-        .tickValues(proportionTicks)
-        .tickSize(4)
-        .tickFormat(d => {
-            const proportion = d / totalParticipants;  // Convert to proportion (0.0 to 1.0)
-            return `${(proportion * 100).toFixed(0)}%`;  // Convert proportion to percentage (e.g., 0.1 -> 10%)
-        });
-
-    // Add x-axis (only on first load)
-    if (isFirstLoad) {
-        chartGroup.append('g')
-            .attr('class', 'x-axis')
-            .attr('transform', `translate(0, ${chartHeight})`)
-            .call(xAxis)
-            .selectAll('text')
-            .style('text-anchor', 'middle')
-            .style('font-size', '1.3em')
-            .attr('dy', '0.8em');
-
-        // Add x-axis label
-        chartGroup.append('text')
-            .attr('class', 'x-axis-label')
-            .attr('text-anchor', 'middle')
-            .attr('x', chartWidth / 2)
-            .attr('y', chartHeight + 30)
-            .style('font-size', '0.9em')
-            .text('Proportion');
-
-        // Add y-axis for category labels
-        const yAxis = d3.axisLeft(yScale)
-                        .tickSize(4);
+        // Female bars
+        groups.selectAll('.female-bar')
+            .data(d => [d])
+            .join('rect')
+            .attr('class', 'female-bar')
+            .attr('x', 0)
+            .attr('height', yScale.bandwidth())
+            .attr('fill', '#ee72c4')
+            .attr('width', d => xScale(d.female));
 
         
-        chartGroup.append('g')
-            .attr('class', 'y-axis')
-            .call(yAxis)
-            .selectAll('text')
-            .style('text-transform', 'uppercase')
-            .style('font-size', '1.2em');
-            
-    } else {
-        // Update existing axes when scrolling
-        chartGroup.select('.x-axis').call(xAxis);
+        // Male bars
+        groups.selectAll('.male-bar')
+            .data(d => [d])
+            .join('rect')
+            .attr('class', 'male-bar')
+            .attr('x', d => xScale(d.female))
+            .attr('height', yScale.bandwidth())
+            .attr('fill', '#28ace4')
+            .attr('width', d => xScale(d.male));
+
+        // Total labels
+        groups.selectAll('.total-label')
+            .data(d => [d])
+            .join('text')
+            .attr('class', 'total-label')
+            .attr('x', d => xScale(d.female + d.male) + 5)
+            .attr('y', yScale.bandwidth() / 2)
+            .attr('dy', '0.35em')
+            .attr('font-size', '0.8em')
+            .attr('fill', '#333')
+            .text(d => `${d.female + d.male} (${((d.female + d.male) / totalParticipants * 100).toFixed(1)}%)`);
+
+            // Tooltip setup
+        const tooltip = d3.select('body').append('div')
+            .attr('class', 'tooltip')
+            .style('position', 'absolute')
+            .style('background', '#fff')
+            .style('padding', '5px 10px')
+            .style('border', '1px solid #333')
+            .style('border-radius', '5px')
+            .style('display', 'none')
+            .style('color', '#333');
+
+            // Adding mouseover and mouseout events to the female bars
+        groups.selectAll('.female-bar')
+            .on('mouseover', (event, d) => {
+                // Brighten the bar by changing the fill color
+                d3.select(event.target)
+                    .style('fill', '#ffd7ef');  // Adjust the color to your liking
+
+                // Show the tooltip
+                tooltip.style('display', 'block')
+                    .html(`
+                        Female: <b>${d.female}</b> <br>
+                        % of Female: <b>${d.percentFemale}%</b>
+                    `)
+                    .style('left', `${event.pageX + 10}px`)  // Add 10px offset from the mouse
+                    .style('top', `${event.pageY - 20}px`); // Add 20px offset above the mouse
+            })
+            .on('mouseout', (event) => {
+                // Reset the bar color on mouseout
+                d3.select(event.target)
+                    .style('fill', '#ee72c4');  // Reset to original color
+
+                // Hide the tooltip
+                tooltip.style('display', 'none');
+            });
+
+        groups.selectAll('.male-bar')
+            .on('mouseover', (event, d) => {
+                // Brighten the bar by changing the fill color
+                d3.select(event.target)
+                    .style('fill', '#b3e0ff');  // Adjust the color to your liking
+        
+                // Show the tooltip
+                tooltip.style('display', 'block')
+                    .html(`
+                        Male: <b>${d.male}</b> <br>
+                        % of Male: <b>${d.percentMale}%</b>
+                    `)
+                    .style('left', `${event.pageX + 10}px`)  // Add 10px offset from the mouse
+                    .style('top', `${event.pageY - 20}px`); // Add 20px offset above the mouse
+            })
+            .on('mouseout', (event) => {
+                // Reset the bar color on mouseout
+                d3.select(event.target)
+                    .style('fill', '#28ace4');  // Reset to original color
+        
+                // Hide the tooltip
+                tooltip.style('display', 'none');
+            });
     }
 
-    // Update x-axis label position dynamically
-    chartGroup.select('.x-axis-label')
-        .attr('x', chartWidth / 2);  // Recalculate position based on current chart width
+    // Initial render
+    renderChart();
 
-    // Create the bar groups (this part doesn't change)
-    const groups = chartGroup.selectAll('.bar-group')
-        .data(data)
-        .join(
-            enter => enter.append('g')
-                .attr('class', 'bar-group')
-                .attr('transform', d => `translate(0, ${yScale(d.category)})`)
-        );
-
-    // Add female bars (pink)
-    groups.selectAll('.female-bar')
-        .data(d => [d])
-        .join(
-            enter => {
-                const bars = enter.append('rect')
-                    .attr('class', 'female-bar')
-                    .attr('x', 0)
-                    .attr('height', yScale.bandwidth())
-                    .attr('fill', '#ee72c4');
-                
-                // Only animate on first load
-                if (isFirstLoad) {
-                    bars.attr('width', 0)
-                        .transition().duration(500)
-                        .attr('width', d => xScale(d.female));
-                } else {
-                    bars.transition().duration(800)
-                        .attr('width', d => xScale(d.female))
-                        .transition().duration(800);
-
-                }
-                return bars;
-            },
-            update => update
-                .attr('width', d => xScale(d.female))
-        );
-
-    // Add male bars (blue)
-    groups.selectAll('.male-bar')
-        .data(d => [d])
-        .join(
-            enter => {
-                const bars = enter.append('rect')
-                    .attr('class', 'male-bar')
-                    .attr('x', d => xScale(d.female))
-                    .attr('height', yScale.bandwidth())
-                    .attr('fill', '#28ace4');
-                
-                // Only animate on first load
-                if (isFirstLoad) {
-                    bars.attr('width', 0)
-                        .transition().duration(500)
-                        .attr('width', d => xScale(d.male));
-                } else {
-                    bars.attr('width', d => xScale(d.male));
-                }
-                return bars;
-            },
-            update => update
-                .attr('x', d => xScale(d.female)) 
-                .attr('width', d => xScale(d.male))
-        );
-
-    groups.selectAll('.total-label')
-        .data(d => [d])
-        .join(
-            enter => enter.append('text')
-                .attr('class', 'total-label')
-                .attr('x', d => xScale(d.female + d.male) + 5) // Position 5px to the right of the total bar
-                .attr('y', yScale.bandwidth() / 2) // Center vertically
-                .attr('dy', '0.35em') // Fine-tune vertical alignment
-                .attr('font-size', '0.8em')
-                .attr('fill', '#333')
-                .text(d => `${d.female + d.male} (${((d.female + d.male) / totalParticipants * 100).toFixed(1)}%)`),
-            update => update
-                .transition().duration(50)
-                .attr('x', d => xScale(d.female + d.male) + 5)
-                .text(d => `${d.female + d.male} (${((d.female + d.male) / totalParticipants * 100).toFixed(1)}%)`)
-        );
-    
-    const tooltip = d3.select('body').append('div')
-        .attr('class', 'tooltip')
-        .style('position', 'absolute')
-        .style('background', '#fff')
-        .style('padding', '5px 10px')
-        .style('border', '1px solid', '#333')
-        .style('border-radius', '5px')
-        .style('display', 'none')
-        .style('color', '#333');
-    
-    groups.selectAll('.female-bar')
-        .on('mouseover', (event, d) => {
-            // Brighten the bar by changing the fill color
-            d3.select(event.target)
-                .style('fill', '#ffd7ef');  // Adjust the color to your liking
-    
-            tooltip.style('display', 'block')
-                .html(`
-                    Female: <b>${d.female}</b> <br>
-                    % of Female: <b>${d.percentFemale}%</b>
-                `)
-                .style('left', `${event.pageX + 10}px`)
-                .style('top', `${event.pageY - 20}px`);
-        })
-        .on('mouseout', (event) => {
-            // Reset the bar color when mouseout
-            d3.select(event.target)
-                .style('fill', '#ee72c4'); 
-    
-            tooltip.style('display', 'none');
-        });
-    
-    groups.selectAll('.male-bar')
-        .on('mouseover', (event, d) => {
-            // Brighten the bar by changing the fill color
-            d3.select(event.target)
-                .style('fill', '#ade4ff');  // Adjust the color to your liking
-    
-            tooltip.style('display', 'block')
-                .html(`
-                    Male: <b>${d.male}</b> <br>
-                    % of Male: <b>${d.percentMale}%</b>
-                `)
-                .style('left', `${event.pageX + 10}px`)
-                .style('top', `${event.pageY - 20}px`);
-        })
-        .on('mouseout', (event) => {
-            // Reset the bar color when mouseout
-            d3.select(event.target)
-                .style('fill', '#28ace4');  
-            tooltip.style('display', 'none');
-        });
+    // Add ResizeObserver for dynamic resizing
+    const containerElement = document.getElementById('active-chart');
+    const resizeObserver = new ResizeObserver(() => renderChart());
+    resizeObserver.observe(containerElement);
 }
-
 
 
 function getAverageStats(participants, currentTime) {
@@ -690,6 +653,7 @@ function getAverageStats(participants, currentTime) {
 
     // Create new dl, dt, dd elements for active stats
     const active_dl = d3.select('#active-stats').append('dl');
+    
     active_dl.append('dt').text('Avg Age');
     active_dl.append('dd').text(averageAge != null ? averageAge.toFixed(1) : '—');
 
@@ -712,327 +676,171 @@ function getAverageStats(participants, currentTime) {
 
 }
 
+function createSimilaritySearchForm(participants) {
 
-
-// function createMetricChart(chartConfig) {
-//     const {
-//         metricName,         // 'age', 'height', or 'weight'
-//         chartId,            // 'age-chart', 'height-chart', or 'weight-chart'
-//         axisLabel,         
-//         participants,
-//         currentTime
-//     } = chartConfig;
-
-//     const activeParticipants = participants.filter(p => p.endurance >= currentTime);
-//     const inactiveParticipants = participants.filter(p => p.endurance < currentTime);
-
-//     const averageMetric = {
-//         active: d3.mean(activeParticipants, d => d[metricName]) || 0,
-//         inactive: d3.mean(inactiveParticipants, d => d[metricName]) || 0
-//     };
-
-//     // Create data with proper metric name as property
-//     const data = [
-//         { category: 'Active', [metricName]: averageMetric.active },
-//         { category: 'Inactive', [metricName]: averageMetric.inactive }
-//     ];
-
-//     const margin = { top: 10, right: 10, bottom: 30, left: 60 };
-//     const width = 300;
-//     const height = 150;
-//     const chartWidth = width - margin.left - margin.right;
-//     const chartHeight = height - margin.top - margin.bottom;
-
-//     const isFirstLoad = !d3.select(`#${chartId} svg`).size();
-
-//     if (isFirstLoad) {
-//         d3.select(`#${chartId}`).html('');
-//     }
-
-//     const svg = d3.select(`#${chartId}`)
-//         .selectAll('svg')
-//         .data([null])
-//         .join('svg')
-//         .attr('width', width)
-//         .attr('height', height);
-
-//     let chartGroup = svg.select('.chart-group');
-    
-//     if (chartGroup.empty()) {
-//         chartGroup = svg.append('g')
-//             .attr('class', 'chart-group')
-//             .attr('transform', `translate(${margin.left},${margin.top})`);
-//     }
-
-//     const xScale = d3.scaleLinear()
-//         .domain([0, d3.max(data, d => d[metricName]) || 1]) // Ensure scale is valid
-//         .range([0, chartWidth]);
-
-//     const yScale = d3.scaleBand()
-//         .domain(data.map(d => d.category))
-//         .range([0, chartHeight])
-//         .padding(0.5);
-
-//     const xAxis = d3.axisBottom(xScale)
-//         .ticks(5)
-
-//     if (isFirstLoad) {
-//         chartGroup.append('g')
-//             .attr('class', 'x-axis')
-//             .attr('transform', `translate(0, ${chartHeight})`)
-//             .call(xAxis);
-
-//         chartGroup.append('text')
-//             .attr('class', 'x-axis-label')
-//             .attr('text-anchor', 'middle')
-//             .attr('x', chartWidth / 2)
-//             .attr('y', chartHeight + margin.bottom)
-//             .style('font-size', '10px')
-//             .text(axisLabel);
-
-//         const yAxis = d3.axisLeft(yScale);
-
-//         chartGroup.append('g')
-//             .attr('class', 'y-axis')
-//             .call(yAxis);
-//     } else {
-//         chartGroup.select('.x-axis').call(xAxis);
-//     }
-
-//     const groups = chartGroup.selectAll('.bar-group')
-//         .data(data)
-//         .join(
-//             enter => enter.append('g')
-//                 .attr('class', 'bar-group')
-//                 .attr('transform', d => `translate(0, ${yScale(d.category)})`)
-//         );
-
-//     const barClass = `${metricName}-bar`;
-    
-//     groups.selectAll(`.${barClass}`)
-//         .data(d => [d])
-//         .join(
-//             enter => enter.append('rect')
-//                 .attr('class', barClass)
-//                 .attr('x', 0)
-//                 .attr('height', yScale.bandwidth())
-//                 .attr('fill', d => d.category === 'Active' ? '#6c90b0' : '#76323f') // Green for active, red for inactive
-//                 .attr('width', 0) // Start with width 0 for animation
-//                 .transition().duration(500)
-//                 .attr('width', d => xScale(d[metricName])),
-//             update => update
-//                 .attr('fill', d => d.category === 'Active' ? '#6c90b0' : '#76323f') // Also update color on data changes
-//                 .transition().duration(500)
-//                 .attr('width', d => xScale(d[metricName]))
-//         );
-
-//     // Add text labels on the bars
-//     const labelClass = `${metricName}-label`;
-
-//     groups.selectAll(`.${labelClass}`)
-//     .data(d => [d])
-//     .join(
-//         enter => enter.append('text')
-//             .attr('class', labelClass)
-//             .attr('x', d => xScale(d[metricName]) + 5) // Position 5px to the right of the bar end
-//             .attr('y', yScale.bandwidth() / 2) // Vertically center in the bar
-//             .attr('dy', '0.35em') // Fine-tune vertical alignment
-//             .attr('font-size', '10px')
-//             .attr('fill', '#333') // Slightly darker text for better readability
-//             .text(d => d[metricName].toFixed(1)), 
-//         update => update
-//             .transition().duration(500)
-//             .attr('x', d => xScale(d[metricName]) + 5) // Update position when data changes
-//             .text(d => d[metricName].toFixed(1))
-//     );
-// }
-
-// // Example usage:
-// function updateAllCharts(participants, currentTime) {
-//     // Create age chart
-//     createMetricChart({
-//         metricName: 'age',
-//         chartId: 'age-chart',
-//         axisLabel: 'avg age',
-//         participants,
-//         currentTime
-//     });
-    
-//     // Create height chart
-//     createMetricChart({
-//         metricName: 'height',
-//         chartId: 'height-chart',
-//         axisLabel: 'avg height (in)',
-//         participants,
-//         currentTime
-//     });
-    
-//     // Create weight chart
-//     createMetricChart({
-//         metricName: 'weight',
-//         chartId: 'weight-chart',
-//         axisLabel: 'avg weight (lb)',
-//         participants,
-//         currentTime
-//     });
-// }
-
-// function createSimilaritySearchForm(participants) {
-//     // Create the form container
-//     const formContainer = document.createElement('div');
-//     formContainer.className = 'similarity-search';
-//     formContainer.style.cssText = `
-//         position: fixed;
-//         top: 20px;
-//         right: 20px;
-//         background: white;
-//         padding: 20px;
-//         border-radius: 8px;
-//         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-//         z-index: 1000;
-//     `;
-
-//     // Create the form HTML
-//     formContainer.innerHTML = `
-//         <h3>Find Similar Runner</h3>
-//         <form id="similarityForm">
-//             <div class="form-group">
-//                 <label for="age">Age:</label>
-//                 <input type="number" id="age" required min="10" max="65">
-//             </div>
-//             <div class="form-group">
-//                 <label for="weight">Weight (lbs):</label>
-//                 <input type="number" id="weight" required min="90" max="300">
-//             </div>
-//             <div class="form-group">
-//                 <label for="height">Height (inches):</label>
-//                 <input type="number" id="height" required min="56" max="82">
-//             </div>
-//             <div class="form-group">
-//                 <label for="gender">Gender:</label>
-//                 <select id="gender" required>
-//                     <option value="F">Female</option>
-//                     <option value="M">Male</option>
-//                 </select>
-//             </div>
-//             <button type="submit">Find Similar Runner</button>
-//         </form>
-//     `;
-
-//     // Add styles
-//     const style = document.createElement('style');
-//     style.textContent = `
-//         .similarity-search .form-group {
-//             margin-bottom: 10px;
-//         }
-//         .similarity-search label {
-//             display: block;
-//             margin-bottom: 5px;
-//         }
-//         .similarity-search input,
-//         .similarity-search select {
-//             width: 100%;
-//             padding: 5px;
-//             border: 1px solid #ddd;
-//             border-radius: 4px;
-//         }
-//         .similarity-search button {
-//             width: 100%;
-//             padding: 8px;
-//             background: #28ace4;
-//             color: white;
-//             border: none;
-//             border-radius: 4px;
-//             cursor: pointer;
-//             margin-top: 10px;
-//         }
-//         .similarity-search button:hover {
-//             background: #1e95c9;
-//         }
-//     `;
-
-//     document.head.appendChild(style);
-//     document.body.appendChild(formContainer);
-
-//     // Add form submission handler
-//     document.getElementById('similarityForm').addEventListener('submit', (e) => {
-//         e.preventDefault();
+    // Add form submission handler
+    document.getElementById('similarityForm').addEventListener('submit', (e) => {
+        e.preventDefault();
         
-//         const userProfile = {
-//             age: +document.getElementById('age').value,
-//             weight: +document.getElementById('weight').value,
-//             height: +document.getElementById('height').value,
-//             gender: document.getElementById('gender').value
-//         };
+        const userProfile = {
+            age: +document.getElementById('age').value,
+            weight: +document.getElementById('weight').value,
+            height: +document.getElementById('height').value,
+            gender: document.getElementById('gender').value
+        };
 
-//         const similarParticipant = findSimilarParticipant(userProfile, participants);
+        const similarParticipant = findSimilarParticipant(userProfile, participants);
         
-//         // Store the current scroll position in sessionStorage
-//         const timeline = document.getElementById('timeline');
-//         sessionStorage.setItem('timelineScroll', timeline.scrollLeft);
-//     });
-// }
+        // Store the current scroll position in sessionStorage
+        const timeline = document.getElementById('timeline');
+        sessionStorage.setItem('timelineScroll', timeline.scrollLeft);
+    });
+}
 
-// function findSimilarParticipant(userProfile, participants) {
-//     // Normalize the ranges for each metric
-//     const maxAge = d3.max(participants, p => p.age);
-//     const maxWeight = d3.max(participants, p => p.weight);
-//     const maxHeight = d3.max(participants, p => p.height);
+function findSimilarParticipant(userProfile, participants) {
+    // Normalize the ranges for each metric
+    const maxAge = d3.max(participants, p => p.age);
+    const maxWeight = d3.max(participants, p => p.weight);
+    const maxHeight = d3.max(participants, p => p.height);
 
-//     // Calculate similarity scores
-//     const scores = participants.map(participant => {
-//         // Only consider participants of the same gender
-//         if (participant.gender !== userProfile.gender) {
-//             return { participant, score: Infinity };
-//         }
+    // Calculate similarity scores
+    const scores = participants.map(participant => {
+        // Only consider participants of the same gender
+        if (participant.gender !== userProfile.gender) {
+            return { participant, score: Infinity };
+        }
 
-//         // Calculate normalized Euclidean distance
-//         const ageDiff = Math.abs(participant.age - userProfile.age) / maxAge;
-//         const weightDiff = Math.abs(participant.weight - userProfile.weight) / maxWeight;
-//         const heightDiff = Math.abs(participant.height - userProfile.height) / maxHeight;
+        // Calculate normalized Euclidean distance
+        const ageDiff = Math.abs(participant.age - userProfile.age) / maxAge;
+        const weightDiff = Math.abs(participant.weight - userProfile.weight) / maxWeight;
+        const heightDiff = Math.abs(participant.height - userProfile.height) / maxHeight;
 
-//         // Weighted sum of differences (can adjust weights based on importance)
-//         const score = Math.sqrt(
-//             Math.pow(ageDiff, 2) +
-//             Math.pow(weightDiff, 2) +
-//             Math.pow(heightDiff, 2)
-//         );
+        // Weighted sum of differences (can adjust weights based on importance)
+        const score = Math.sqrt(
+            Math.pow(ageDiff, 2) +
+            Math.pow(weightDiff, 2) +
+            Math.pow(heightDiff, 2)
+        );
 
-//         return { participant, score };
-//     });
+        return { participant, score };
+    });
 
-//     // Sort by similarity score and return the most similar participant
-//     scores.sort((a, b) => a.score - b.score);
-//     const similarParticipant = scores[0].participant;
+    // Sort by similarity score and return the most similar participant
+    scores.sort((a, b) => a.score - b.score);
+    const similarParticipant = scores[0].participant;
 
-//     // Scroll to the participant's position and highlight it
-//     highlightParticipant(similarParticipant.id);
+    // Scroll to the participant's position and highlight it
+    highlightParticipant(similarParticipant.id, true);
     
-//     return similarParticipant;
-// }
+    return similarParticipant;
+}
 
-// function highlightParticipant(participantId) {
-//     const timeline = document.getElementById('timeline');
-//     const participant = d3.select(`image[data-id="${participantId}"]`);
-//     const participantX = +participant.attr('x');
+document.getElementById('similarityForm').addEventListener('input', (e) => {
+    const input = e.target;
 
-//     // Scroll to the participant's position
-//     timeline.scrollLeft = participantX - (timeline.clientWidth / 2);
+    // Check if the input is valid
+    if (input.type === 'number') {
+        const value = Number(input.value);
 
-//     // Add highlight effect
-//     participant
-//         .style('filter', 'brightness(1.5) drop-shadow(0 0 10px #fff)')
-//         .style('transform', 'scale(1.5)')
-//         .style('transform-origin', 'center')
-//         .style('z-index', 1000);
+        // Define valid ranges
+        const min = Number(input.min);
+        const max = Number(input.max);
 
-//     // Remove highlight after 3 seconds
-//     setTimeout(() => {
-//         participant
-//             .style('filter', null)
-//             .style('transform', null)
-//             .style('z-index', null);
-//     }, 3000);
-// }
+        // Apply styles dynamically for better UX
+        if (value < min || value > max || isNaN(value)) {
+            input.style.backgroundColor = '#f5c6d1';
+        } else {
+            input.style.backgroundColor = '#c2e0cc';
+        }
+    }
+});
+
+
+function highlightParticipant(participantId, isSearch) {
+    const timeline = document.getElementById('timeline');
+    const participantGroup = d3.select(`g[data-id="${participantId}"]`);
+    
+    // Check if participantGroup is correctly selected
+    if (!participantGroup.node()) {
+        console.log("Participant group not found");
+        return;
+    }
+
+    const participantTransform = participantGroup.attr('transform');
+    
+    // Check if the 'transform' attribute exists and matches the pattern
+    if (!participantTransform) {
+        console.log("No transform attribute found for participant");
+        return;
+    }
+
+    const participantX = +participantTransform.match(/translate\(([\d.]+)/)[1];
+    
+    // Log the participantX value to ensure it's correct
+    console.log("Participant X position: ", participantX);
+
+    // Scroll to the participant's position
+    timeline.scrollLeft = participantX - (timeline.clientWidth / 2);
+
+    // Add highlight effect with smooth scaling
+    participantGroup
+        .style('transition', 'transform 0.3s ease, filter 0.3s ease')
+        .style('filter', 'brightness(1.5) drop-shadow(0 0 10px #fff)')
+        .attr('transform', participantGroup.attr('transform') + ' scale(1.5)');
+
+    // Cleanly remove highlight effect after 3 seconds
+    setTimeout(() => {
+        participantGroup
+            .style('filter', null)
+            .attr('transform', participantGroup.attr('transform').replace(' scale(1.5)', ''));
+    }, 3000);
+
+    // If isSearch is true, display the text next to the icon
+    if (isSearch) {
+        const similarParticipant = participantGroup.datum(); // Get the participant data
+
+        // Log participant data to ensure it's being accessed correctly
+        console.log("Similar Participant Data: ", similarParticipant);
+
+        window.scrollTo({
+            top: 20,
+            behavior: 'smooth'  // Makes the scroll smooth
+        });
+
+        // Create the message element
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('similar-participant-message');
+        messageDiv.innerHTML = `Participant #${similarParticipant.id} is your closest match. Click the icon to learn more!`;
+
+        // Style the message (You can adjust these styles as needed)
+        const participantRect = participantGroup.node().getBoundingClientRect();
+
+        console.log("Participant Rect: ", participantRect);
+
+        messageDiv.style.position = 'absolute';
+        messageDiv.style.left = `${participantRect.x + 35}px`; // Position to the right of the icon
+        messageDiv.style.top = `${participantRect.y + window.scrollY - 35}px`; // Align vertically with the icon
+        messageDiv.style.padding = '10px';
+        messageDiv.style.marginTop = '20px';
+        messageDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
+        messageDiv.style.border = '1px solid rgba(221, 221, 221, 0.7)';
+        messageDiv.style.width = '300px';
+        messageDiv.style.borderRadius = '5px';
+        messageDiv.style.color = '#333';
+        messageDiv.style.fontSize = '1em;';
+        messageDiv.style.zIndex = '1000'; // Ensure it's on top of other elements
+
+        // Append the message to the body
+        document.body.appendChild(messageDiv);
+
+        // Set a timer to remove the message after 5 seconds (5000 ms)
+        setTimeout(() => {
+            messageDiv.remove();  // Remove the message after 5 seconds
+        }, 5000);
+    }
+}
+
+
+
 
 
