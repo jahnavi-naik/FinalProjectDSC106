@@ -108,25 +108,19 @@ body {
 
 .dashboard {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     width: 100%;
 }
 
 .chart-container {
     background: white;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(76, 74, 74, 0.1);
     height: 250px;
     position: relative;
     width: 100%;  /* Take full width of grid cell */
-}
-
-.chart-container h3 {
-    margin-bottom: 0.5rem;
-    color: #76323f;
-    font-size: 0.9rem;
+    flex: 1; 
     text-align: center;
 }
 
@@ -194,7 +188,7 @@ a.button {
     background-color: white;
     font-size: 0.9em;
     text-decoration: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -251,7 +245,6 @@ a.button:hover {
     left: 380px;           /* Center horizontally */
     width: 550px;
     padding: 10px;
-    border-radius: 5px;
     z-index: 1;        /* Ensure it sits above the timeline */
     pointer-events: none;
     opacity: 0;          /* Start hidden */
@@ -265,7 +258,6 @@ a.button:hover {
     left: 380px;           /* Center horizontally */
     width: 550px;
     padding: 10px;
-    border-radius: 5px;
     z-index: 1;        /* Ensure it sits above the timeline */
     pointer-events: none;
     opacity: 0;          /* Start hidden */
@@ -285,52 +277,63 @@ a.button:hover {
 }
 
 #bottom {
-    margin: 2rem auto;  /* Center horizontally */
+    margin: 1rem auto;  /* Center horizontally */
     padding: 0 2rem;    /* Add padding on sides */
     width: 100%;        /* Take full width up to max-width */
 }
 
 #active-chart {
-    display: flex; /* Ensures items inside the container can align flexibly */
-    flex-direction: column; /* Stack items vertically */
-    align-items: stretch; /* Stretch content to take full container width */
-    justify-content: flex-start; /* Align content at the top */
-    padding: 10px;
-    height: 100%; /* Ensure container takes full height */
-    overflow: auto; /* Allow scrolling if content overflows */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    max-height: 100%;          /* Ensure it doesn’t overflow */
+    width: 100%;               /* Fit container width */
+    overflow: hidden;          /* Prevent scrollbars unless necessary */
 }
 
-.chart-container {
-    flex: 1; /* Allow the chart-container to take up remaining space */
-}
 
 #stats {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    padding: 10px;
+    padding: 15px;
     overflow: auto;
     position: relative;
 }
 
 #active-stats, #inactive-stats {
-    flex: 1;
+    display: flex;             /* Enables Flexbox */
+    flex-direction: column;    /* Stack content vertically */
+    justify-content: center;   /* Centers content vertically */
+    height: 100%;              /* Ensures the container stretches fully */
     padding: 0.5rem;
     background-color: #76323f;
     border-radius: 20px;
 }
 
+
 #stats-content {
-    display: flex;
-    flex-direction: column; /* Stack the active and inactive stats vertically */
-    height: 100%; /* Allow it to take the full height of the parent */
-    gap: 1rem; /* Space between the two boxes */
+    display: flex;           
+    flex-direction: column; 
+    gap: 1rem;              
+    height: 100%;            
+}
+
+.stats-group {
+    flex: 1;               
+    display: grid;
+    grid-template-columns: 20% 80%;
+    align-items: center;
+    height: 100%; /* Ensures #stats-content stretches fully */
+    flex: 1;   
 }
 
 #stats-content p {
     font-size: 1rem;
     font-weight: bold;
+    color: #333;
+
 }
 
 #active-stats dl, #inactive-stats dl {
@@ -345,7 +348,7 @@ a.button:hover {
     grid-row: 1;
     text-align: center;
     text-transform: uppercase;
-    font-size: 0.8em;
+    font-size: 0.85em;
     color: #fde8e8;
 }
 
@@ -357,3 +360,27 @@ a.button:hover {
     color: #FFF;
 }
 
+.dash-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+/* Define the bounce animation */
+@keyframes bounce {
+    0% { 
+        transform: scale(1) translateY(0); 
+    }
+    50% { 
+        transform: scale(1.2) translateY(-10); /* Increase size and move up */
+    }
+    100% { 
+        transform: scale(1) translateY(0); /* Return to normal */
+    }
+}
+
+.runner.highlight {
+    animation: bounce 1s ease-in-out infinite;  /* Infinite bounce animation */
+}

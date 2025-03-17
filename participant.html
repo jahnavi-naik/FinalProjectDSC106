@@ -68,7 +68,7 @@
     <div class="container">
         <div class="header">
             <h1>Participant Details</h1>
-            <button class="back-button" onclick="window.location.href='index.html'">Back to Main Page</button>
+            <button class="back-button" onclick="returnToTimeline()">Back to Main Page</button>
         </div>
         
         <div class="metrics-grid">
@@ -114,5 +114,16 @@
         </div>
     </div>
     <script src="participant.js"></script>
+    <script>
+    function returnToTimeline() {
+        // Store the participant ID in sessionStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const participantId = urlParams.get('id');
+        sessionStorage.setItem('lastViewedParticipant', participantId);
+        
+        // Navigate back to the main page
+        window.location.href = 'index.html';
+    }
+    </script>
 </body>
 </html> 
