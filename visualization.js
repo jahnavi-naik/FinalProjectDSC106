@@ -144,7 +144,7 @@ function createVisualization(participants, rawData) {
         { text: "Each icon represents a participant who has reached their maximum effort—blue for males and pink for females. As we approach the 7-minute mark, the first group of participants reaches their limit. Hover over an icon for a brief description, or click to explore detailed insights.", start: 350, end: 450, type: 1 },
         { text: "Approaching the 9-minute mark, more and more participants reach their maximum effort. Hover over the dynamic bars on the bottom to view the exact numbers.", start: 510, end: 600, type: 1 },
         { text: "At 12 minutes and 48 seconds, approximately 25% of participants have reached their physiological limits.", start: 715, end: 765, type: 2},
-        { text: "As we approach 14 minutes, waves of participants reach their limits. Scroll up to view all the data.", start: 825, end: 885, type: 2 },
+        { text: "As we approach 15 minutes, waves of participants reach their limits and we reach the 50th percentile.", start: 825, end: 885, type: 2 },
         { text: "Runners who are still active at the 18-minute mark are in the 90th percentile of this study.", start: 1070, end: 1110, type: 2 },
         { text: "Achieving an endurance time of 19:48, Runner #395 is our last standing female participant. Approximately 5% of male participants remain at this point.", start: 1175, end: 1230, type: 1 },
         { text: "This leading group of male participants persists for approximately five more minutes. ", start: 1270, end: 1350, type: 1 },
